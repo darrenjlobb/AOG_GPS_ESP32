@@ -8,17 +8,17 @@ void headingRollCalc() {
 
 	if (existsUBXRelPosNED) {
 		//check if all values are vaild
-		if ((bitRead(UBXRelPosNED[UBXRingCount2].flags, 0)) || (GPSSet.checkUBXFlags == 0)) {//gnssFixOK?
-			if (bitRead(UBXRelPosNED[UBXRingCount2].flags, 2) || (GPSSet.checkUBXFlags == 0)) {//1 if relative position components and moving baseline are valid
+		if ((bitRead(UBXRelPosNED[UBXRingCount2].flags, 0)) || (Set.checkUBXFlags == 0)) {//gnssFixOK?
+			if (bitRead(UBXRelPosNED[UBXRingCount2].flags, 2) || (Set.checkUBXFlags == 0)) {//1 if relative position components and moving baseline are valid
 			//RelPosNED OK: heading + roll calc												 
 
-				if ((UBXRelPosNED[UBXRingCount2].relPosLength > (GPSSet.AntDist / GPSSet.AntDistDeviationFactor)) && (UBXRelPosNED[UBXRingCount2].relPosLength < (GPSSet.AntDist * GPSSet.AntDistDeviationFactor)))
+				if ((UBXRelPosNED[UBXRingCount2].relPosLength > (Set.AntDist / Set.AntDistDeviationFactor)) && (UBXRelPosNED[UBXRingCount2].relPosLength < (Set.AntDist * Set.AntDistDeviationFactor)))
 				{
 					//check if vector lenght between antennas is in range = indicator of heading/roll quality
 
 					dualAntNoValueCount = 0;//reset watchdog
 
-					if ((UBXRelPosNED[UBXRingCount2].relPosLength > (GPSSet.AntDist / ((GPSSet.AntDistDeviationFactor / 4) + 0.75))) && (UBXRelPosNED[UBXRingCount2].relPosLength < (GPSSet.AntDist * ((GPSSet.AntDistDeviationFactor / 4) + 0.75))))
+					if ((UBXRelPosNED[UBXRingCount2].relPosLength > (Set.AntDist / ((Set.AntDistDeviationFactor / 4) + 0.75))) && (UBXRelPosNED[UBXRingCount2].relPosLength < (Set.AntDist * ((Set.AntDistDeviationFactor / 4) + 0.75))))
 					{	//check if vector lenght between antennas is in range = indicator of heading/roll quality							
 						//for roll calc only 1/4 deviation !!
 
@@ -50,17 +50,17 @@ void headingRollCalc() {
 							headVTGVarProcess = VarProcessSlow; //set Kalman filter
 						}
 
-						if (((GPSSet.headingAngleCorrection > 70) && (GPSSet.headingAngleCorrection < 110))
-							|| ((GPSSet.headingAngleCorrection > 250) && (GPSSet.headingAngleCorrection < 290)))
+						if (((Set.headingAngleCorrection > 70) && (Set.headingAngleCorrection < 110))
+							|| ((Set.headingAngleCorrection > 250) && (Set.headingAngleCorrection < 290)))
 						{//ant left+right: headingCorrectionAngle 90 or 270
 				//roll		
-							if (((UBXPVT1[UBXRingCount1].gSpeed > 3000) && (abs(UBXRelPosNED[UBXRingCount2].relPosD) < (GPSSet.AntDist * 3)))
-								|| ((UBXPVT1[UBXRingCount1].gSpeed <= 3000) && (abs(UBXRelPosNED[UBXRingCount2].relPosD) < (GPSSet.AntDist * 2)))) {//50% = 26.7° max
-								roll = (atan2((double(UBXRelPosNED[UBXRingCount2].relPosD) + (double(UBXRelPosNED[UBXRingCount2].relPosHPD) / 100)), GPSSet.AntDist)) / PI180;
-								roll -= GPSSet.rollAngleCorrection;
+							if (((UBXPVT1[UBXRingCount1].gSpeed > 3000) && (abs(UBXRelPosNED[UBXRingCount2].relPosD) < (Set.AntDist * 3)))
+								|| ((UBXPVT1[UBXRingCount1].gSpeed <= 3000) && (abs(UBXRelPosNED[UBXRingCount2].relPosD) < (Set.AntDist * 2)))) {//50% = 26.7° max
+								roll = (atan2((double(UBXRelPosNED[UBXRingCount2].relPosD) + (double(UBXRelPosNED[UBXRingCount2].relPosHPD) / 100)), Set.AntDist)) / PI180;
+								roll -= Set.rollAngleCorrection;
 								noRollCount = 0;
 								rollVarProcess = VarProcessVeryFast; //set Kalman filter fast
-								if (GPSSet.debugmodeHeading) { Serial.print("roll calc: "); Serial.print(roll); }
+								if (Set.debugmodeHeading) { Serial.print("roll calc: "); Serial.print(roll); }
 							}
 							else {
 								rollVarProcess = VarProcessSlow;
@@ -68,7 +68,7 @@ void headingRollCalc() {
 								noRollCount++;
 							}
 						}
-						if (GPSSet.debugmodeFilterPos) { Serial.println("perfect Signal"); }
+						if (Set.debugmodeFilterPos) { Serial.println("perfect Signal"); }
 					}
 					else
 						//signal medium
@@ -95,30 +95,30 @@ void headingRollCalc() {
 						roll = roll * 0.92;
 						noRollCount++;
 						//start filter GPS pos, set Kalman values
-						if (GPSSet.filterGPSposOnWeakSignal == 1) {
+						if (Set.filterGPSposOnWeakSignal == 1) {
 							filterGPSpos = true;
 							latVarProcess = VarProcessVeryFast; //set Kalman filter
 							lonVarProcess = VarProcessVeryFast;
 						}
 
-						if (GPSSet.debugmodeFilterPos) { Serial.println("medium Signal"); }
-						if (GPSSet.debugmode) {
+						if (Set.debugmodeFilterPos) { Serial.println("medium Signal"); }
+						if (Set.debugmode) {
 							Serial.println("poor quality of GPS signal: NO roll calc, heading calc OK");
-							Serial.print("Antenna distance set: "); Serial.print(GPSSet.AntDist); Serial.print("  Ant. dist from GPS: "); Serial.println(UBXRelPosNED[UBXRingCount2].relPosLength);
+							Serial.print("Antenna distance set: "); Serial.print(Set.AntDist); Serial.print("  Ant. dist from GPS: "); Serial.println(UBXRelPosNED[UBXRingCount2].relPosLength);
 						}
 					}//end of deviation good or perfect					
 				//heading
-					HeadingRelPosNED = (double(UBXRelPosNED[UBXRingCount2].relPosHeading) * 0.00001) + GPSSet.headingAngleCorrection;
+					HeadingRelPosNED = (double(UBXRelPosNED[UBXRingCount2].relPosHeading) * 0.00001) + Set.headingAngleCorrection;
 					if (HeadingRelPosNED >= 360) { HeadingRelPosNED -= 360; }
 					//go to cos for filtering to avoid 360-0° jump
 					cosHeadRelPosNED = cos((HeadingRelPosNED * PI180));
-					if (GPSSet.debugmodeRAW) {
+					if (Set.debugmodeRAW) {
 						Serial.print("GPShead cos filtCos filtGPSHead"); Serial.print(",");
 						Serial.print(HeadingRelPosNED); Serial.print(",");
 						Serial.print(cosHeadRelPosNED, 4); Serial.print(",");
 					}
 
-					if (GPSSet.debugmodeHeading) { Serial.print("RelPosNED heading calc: "); Serial.print(HeadingRelPosNED); }
+					if (Set.debugmodeHeading) { Serial.print("RelPosNED heading calc: "); Serial.print(HeadingRelPosNED); }
 					//Kalman filter heading
 					headK = cosHeadRelPosNED;//input
 					headPc = headP + headVarProcess;
@@ -135,14 +135,14 @@ void headingRollCalc() {
 					}
 					else { HeadingRelPosNED = double(360.0) - (acos(headXe) / PI180); }
 
-					if (GPSSet.debugmodeRAW) {
+					if (Set.debugmodeRAW) {
 						Serial.print(headXe, 4); Serial.print(",");
 						Serial.print(HeadingRelPosNED); Serial.print(",");
 					}
 
 					dualGPSHeadingPresent = true;
 
-					if (GPSSet.debugmodeHeading) {
+					if (Set.debugmodeHeading) {
 						Serial.print("heading filterd: "); Serial.print(HeadingRelPosNED);
 						Serial.print(" Heading Diff per sec: "); Serial.print(HeadingDiff * 1000);
 					}
@@ -156,7 +156,7 @@ void headingRollCalc() {
 					rollZp = rollXp;
 					rollXe = (rollG * (rollK - rollZp)) + rollXp;//result					
 
-					if (GPSSet.debugmodeRAW) {
+					if (Set.debugmodeRAW) {
 						Serial.print("roll filtRoll,");
 						Serial.print(roll); Serial.print(",");
 						Serial.print(rollXe); Serial.print(",");
@@ -165,14 +165,14 @@ void headingRollCalc() {
 					roll = rollXe;
 					if (noRollCount < 40) { rollPresent = true; }//24.03.2020
 					else { noRollCount = 42; rollPresent = false; }//prevent overflow
-					if (GPSSet.debugmodeHeading) {
+					if (Set.debugmodeHeading) {
 						Serial.print(" roll filtered: "); Serial.println(roll);
-						Serial.print("Antenna distance set: "); Serial.print(GPSSet.AntDist); Serial.print("  Ant. dist from GPS: "); Serial.println(UBXRelPosNED[UBXRingCount2].relPosLength);
+						Serial.print("Antenna distance set: "); Serial.print(Set.AntDist); Serial.print("  Ant. dist from GPS: "); Serial.println(UBXRelPosNED[UBXRingCount2].relPosLength);
 					}
-					if (GPSSet.debugmodeRAW) {
+					if (Set.debugmodeRAW) {
 						Serial.print("MaxHeadingDiff,"); Serial.print(HeadingDiff);
 						Serial.print(",AntDist AntDisGPS,");
-						Serial.print(GPSSet.AntDist); Serial.print(","); Serial.print(UBXRelPosNED[UBXRingCount2].relPosLength); Serial.print(",");
+						Serial.print(Set.AntDist); Serial.print(","); Serial.print(UBXRelPosNED[UBXRingCount2].relPosLength); Serial.print(",");
 					}
 				}
 
@@ -196,17 +196,17 @@ void headingRollCalc() {
 					HeadingQuotaVTG = double(UBXPVT1[UBXRingCount1].gSpeed) / double(3000);
 					if (HeadingQuotaVTG > 1.0) { HeadingQuotaVTG = 1.0; }
 
-					if (GPSSet.filterGPSposOnWeakSignal == 1) {
+					if (Set.filterGPSposOnWeakSignal == 1) {
 						filterGPSpos = true;
 						latVarProcess = VarProcessFast; //set Kalman filter
 						lonVarProcess = VarProcessFast;
 					}
-					if (GPSSet.debugmodeFilterPos) { Serial.println("very weak Signal, or only 1 Antenna"); }
-					if (GPSSet.debugmode || GPSSet.debugmodeHeading) {
+					if (Set.debugmodeFilterPos) { Serial.println("very weak Signal, or only 1 Antenna"); }
+					if (Set.debugmode || Set.debugmodeHeading) {
 						Serial.println("poor quality of GPS signal, or only 1 Antenna: NO heading/roll calc");
-						Serial.print("Antenna distance set: "); Serial.print(GPSSet.AntDist); Serial.print("  Ant. dist from GPS: "); Serial.println(UBXRelPosNED[UBXRingCount2].relPosLength);
+						Serial.print("Antenna distance set: "); Serial.print(Set.AntDist); Serial.print("  Ant. dist from GPS: "); Serial.println(UBXRelPosNED[UBXRingCount2].relPosLength);
 					}
-					if (GPSSet.debugmodeRAW) { Serial.print(",,,,,,,,,,,,,"); }
+					if (Set.debugmodeRAW) { Serial.print(",,,,,,,,,,,,,"); }
 				}
 			}
 
@@ -234,9 +234,9 @@ void headingRollCalc() {
 			}
 			else { HeadingVTG = double(360.0) - (acos(headVTGXe) / PI180); }
 
-			if (GPSSet.debugmodeHeading) { Serial.print("VTG heading (only from Ant R) filtered: "); Serial.println(HeadingVTG); }
+			if (Set.debugmodeHeading) { Serial.print("VTG heading (only from Ant R) filtered: "); Serial.println(HeadingVTG); }
 
-			if (GPSSet.debugmodeRAW) {
+			if (Set.debugmodeRAW) {
 				Serial.print("headVTG filtCosHeadVTG filtHeadVTG,");
 				Serial.print(float(UBXPVT1[UBXRingCount1].headMot) * 0.00001); Serial.print(",");
 				Serial.print(cosHeadVTG, 4); Serial.print(",");
@@ -266,13 +266,13 @@ void headingRollCalc() {
 				}
 			}
 			else { drivDirect = 0; }
-			if (GPSSet.debugmodeHeading) {
+			if (Set.debugmodeHeading) {
 				Serial.print("driving direction: "); Serial.println(drivDirect);
 				Serial.print("Heading quota VTG :"); Serial.println(HeadingQuotaVTG);
 			}
 
 		}
-		else { if (GPSSet.debugmode) { Serial.println("UBX RelPosNED flag: relative position not valid ->  NO heading + roll calc"); } }
+		else { if (Set.debugmode) { Serial.println("UBX RelPosNED flag: relative position not valid ->  NO heading + roll calc"); } }
 	}
 
 //single Antenna
@@ -308,17 +308,17 @@ void headingRollCalc() {
 		}
 		else { HeadingVTG = double(360.0) - (acos(headVTGXe) / PI180); }
 
-		if ((GPSSet.debugmodeHeading) || (GPSSet.debugmodeVirtAnt)) { Serial.println("UBX RelPosNED not present (single Antenna), or checksums invalid"); }
+		if ((Set.debugmodeHeading) || (Set.debugmodeVirtAnt)) { Serial.println("UBX RelPosNED not present (single Antenna), or checksums invalid"); }
 	}//end single antenna
 
 
 	//roll: filter before sending to AOG, if roll corrected position is send
-	if (GPSSet.GPSPosCorrByRoll) { rollToAOG = (rollToAOG * 0.7) + (roll * 0.3); }
+	if (Set.GPSPosCorrByRoll) { rollToAOG = (rollToAOG * 0.7) + (roll * 0.3); }
 	else { rollToAOG = roll; }
 
 	//heading
 	if (UBXPVT1[UBXRingCount1].gSpeed > 5) {//prevent /0
-		HeadingDiff = 2.5 + (double(GPSSet.MaxHeadChangPerSec) * (UBXPVT1[UBXRingCount1].iTOW - UBXPVT1[(UBXRingCount1 + sizeOfUBXArray - 1) % sizeOfUBXArray].iTOW)) / (double(UBXPVT1[UBXRingCount1].gSpeed)*0.72);
+		HeadingDiff = 2.5 + (double(Set.MaxHeadChangPerSec) * (UBXPVT1[UBXRingCount1].iTOW - UBXPVT1[(UBXRingCount1 + sizeOfUBXArray - 1) % sizeOfUBXArray].iTOW)) / (double(UBXPVT1[UBXRingCount1].gSpeed)*0.72);
 	}
 	else { HeadingDiff = 200; }
 	
@@ -326,18 +326,18 @@ void headingRollCalc() {
 	HeadingMax = HeadingVTGOld + HeadingDiff;
 	//if ((HeadingVTG > HeadingDiff) && (HeadingVTG < (360 - HeadingDiff)) && (UBXPVT1[UBXRingCount1].gSpeed > 1000)) {
 	if ((HeadingVTG > HeadingDiff) && (HeadingVTG < (360 - HeadingDiff)) && (abs(HeadingVTGOld - HeadingVTG) < 150) && (UBXPVT1[UBXRingCount1].gSpeed > 1000)) {
-		if (GPSSet.debugmodeRAW) {
+		if (Set.debugmodeRAW) {
 			Serial.print("HeadingVTG VTGconstrain,");
 			Serial.print(HeadingVTG); Serial.print(",");
 		}
 		HeadingVTG = constrain(HeadingVTG, HeadingMin, HeadingMax);
-		if (GPSSet.debugmodeHeading) {
+		if (Set.debugmodeHeading) {
 			Serial.print("VTGLimits: HeadMin: "); Serial.print(HeadingMin); Serial.print(" HeadMax: ");
 			Serial.print(HeadingMax); Serial.print(" Heading VTG: "); Serial.println(HeadingVTG);
 		}
-		if (GPSSet.debugmodeRAW) { Serial.print(HeadingVTG); Serial.print(","); }
+		if (Set.debugmodeRAW) { Serial.print(HeadingVTG); Serial.print(","); }
 	}
-	else { if (GPSSet.debugmodeRAW) { Serial.print("VTG NO constrain, , ,"); } }
+	else { if (Set.debugmodeRAW) { Serial.print("VTG NO constrain, , ,"); } }
 
 
 	HeadingMixBak = HeadingMix;
@@ -376,7 +376,7 @@ void headingRollCalc() {
 	}
 
 
-	if (GPSSet.debugmodeRAW) {
+	if (Set.debugmodeRAW) {
 		Serial.print("VTGQuota HeadQualFac HeadingVTG HeadingRelPos HeadingMixUnLim,");
 		Serial.print(HeadingQuotaVTG); Serial.print(",");
 		Serial.print(HeadingQualFactor); Serial.print(",");
@@ -389,15 +389,15 @@ void headingRollCalc() {
 	HeadingMax = HeadingMixBak + HeadingDiff;
 	if ((HeadingMixBak > HeadingDiff) && (HeadingMixBak < (360-HeadingDiff))) {//360 to 0
 		HeadingMix = constrain(HeadingMix, HeadingMin, HeadingMax);
-		if (GPSSet.debugmodeHeading) {
+		if (Set.debugmodeHeading) {
 			Serial.print("MixLimits: HeadMin: "); Serial.print(HeadingMin); Serial.print(" HeadMax: ");
 			Serial.print(HeadingMax); Serial.print(" Heading Mix: "); Serial.println(HeadingMix);
 		}
-		if (GPSSet.debugmodeRAW) {Serial.print("constrain used,");}
+		if (Set.debugmodeRAW) {Serial.print("constrain used,");}
 	}
-	else { if (GPSSet.debugmodeRAW) { Serial.print("NO constrain,"); } }
+	else { if (Set.debugmodeRAW) { Serial.print("NO constrain,"); } }
 */
-	if (GPSSet.debugmodeRAW) {
+	if (Set.debugmodeRAW) {
 	//	Serial.print("headDiffMin HeadDiffMax HeadingMix,");
 	//	Serial.print(HeadingMin); Serial.print(",");
 	//	Serial.print(HeadingMax); Serial.print(",");
@@ -417,49 +417,49 @@ void virtualAntennaPoint() {
 	double virtLonRad = double(UBXPVT1[UBXRingCount1].lon) / double(10000000) * PI180;
 	double virtLatRadTemp = 0.0, virtAntHeadingDiff = 0.0, headingRad = 0.0, WayByRadius = 0.0;
 
-	double toRight = 0;
+	double toLeft = 0;
 	virtAntPosPresent = false;
 
-	if (rollPresent && (GPSSet.GPSPosCorrByRoll == 1)) { //calculate virtual Antenna point using roll
-		toRight = tan((roll * PI180)) * GPSSet.AntHight;
-		if (GPSSet.debugmodeVirtAnt) {
-			Serial.print("roll degr: "); Serial.print(roll, 2); Serial.print(" to right by roll: ");
-			Serial.println(toRight);
+	if (rollPresent && (Set.GPSPosCorrByRoll == 1)) { //calculate virtual Antenna point using roll
+		toLeft = tan((roll * PI180)) * Set.AntHight;
+		if (Set.debugmodeVirtAnt) {
+			Serial.print("roll degr: "); Serial.print(roll, 2); Serial.print(" to left by roll: ");
+			Serial.println(toLeft);
 		}
-		if (GPSSet.debugmodeRAW) {
-			Serial.print("roll toRightRoll toRight SetToRight SetForew,");
+		if (Set.debugmodeRAW) {
+			Serial.print("roll toLeftRoll toLeft SetToLeft SetForew,");
 			Serial.print(roll); Serial.print(",");
-			Serial.print(toRight); Serial.print(",");
+			Serial.print(toLeft); Serial.print(",");
 		}
 
-		toRight = toRight - GPSSet.virtAntRight;
-		if (GPSSet.debugmodeRAW) {
-			Serial.print(toRight); Serial.print(",");
-			Serial.print(GPSSet.virtAntRight); Serial.print(",");
-			Serial.print(GPSSet.virtAntForew); Serial.print(",");
+		toLeft = toLeft - Set.virtAntLeft;
+		if (Set.debugmodeRAW) {
+			Serial.print(toLeft); Serial.print(",");
+			Serial.print(Set.virtAntLeft); Serial.print(",");
+			Serial.print(Set.virtAntForew); Serial.print(",");
 		}
 	}
 	else {
-		toRight = 0 - GPSSet.virtAntRight;
-		if (GPSSet.debugmodeRAW) { Serial.print(",,,,,,"); }
+		toLeft = 0 - Set.virtAntLeft;
+		if (Set.debugmodeRAW) { Serial.print(",,,,,,"); }
 	}
 
-	if (GPSSet.virtAntForew != 0) {
-		if (toRight != 0) {
-			//shift Antenna foreward and to the right: direction to move point: heading-atan(foreward/right)
-			virtAntHeadingDiff = (atan2(toRight, GPSSet.virtAntForew)) / PI180;
+	if (Set.virtAntForew != 0) {
+		if (toLeft != 0) {
+			//shift Antenna foreward and to the left: direction to move point: heading-atan(foreward/right)
+			virtAntHeadingDiff = (atan2(toLeft, Set.virtAntForew)) / PI180;
 			//distance to move  cm  / mean radius of earth cm (WGS84 6.371.000,8m)
-			double distAnt = sqrt((toRight * toRight) + (GPSSet.virtAntForew * GPSSet.virtAntForew));
+			double distAnt = sqrt((toLeft * toLeft) + (Set.virtAntForew * Set.virtAntForew));
 			WayByRadius = distAnt / 637100080;
-			if (GPSSet.debugmodeRAW) {
+			if (Set.debugmodeRAW) {
 				Serial.print("distToMove SetForew virtAntHeadDiff,");
 				Serial.print(distAnt,4); Serial.print(",");
-				Serial.print(GPSSet.virtAntForew); Serial.print(",");
+				Serial.print(Set.virtAntForew); Serial.print(",");
 				Serial.print(virtAntHeadingDiff); Serial.print(",");
 				Serial.print("WayByRadius,");
 				Serial.print(WayByRadius,10); Serial.print(",");
 			}
-			if (GPSSet.debugmodeVirtAnt) {
+			if (Set.debugmodeVirtAnt) {
 				Serial.print("virt Ant: real dist to move"); Serial.print(distAnt);
 				Serial.print(" WayByRadius: "); Serial.println(WayByRadius, 10);
 				Serial.print(" angle corr by: "); Serial.println(virtAntHeadingDiff, 2);
@@ -469,17 +469,17 @@ void virtualAntennaPoint() {
 			//shift Antenna only foreward
 			virtAntHeadingDiff = 0.0;
 			//distance to move  cm  / mean radius of earth cm (WGS84 6.371.000,8m)
-			WayByRadius = GPSSet.virtAntForew / 637100080;
+			WayByRadius = Set.virtAntForew / 637100080;
 
 		}
 	}
 	else {
-		if (toRight != 0) {
-			//shift Antenna only right (needed for roll compensation)
+		if (toLeft != 0) {
+			//shift Antenna only left (needed for roll compensation)
 			virtAntHeadingDiff = 90.0;
-			WayByRadius = toRight / 637100080;
-			if (GPSSet.debugmodeVirtAnt) {
-				Serial.print("effective dist to move virt Ant: "); Serial.print(toRight);
+			WayByRadius = toLeft / 637100080;
+			if (Set.debugmodeVirtAnt) {
+				Serial.print("effective dist to move virt Ant: "); Serial.print(toLeft);
 				Serial.print(" WayToRaduis: "); Serial.println(WayByRadius, 12);
 			}
 		}
@@ -497,14 +497,7 @@ void virtualAntennaPoint() {
 		headingRad *= PI180;
 		
 		virtLatRadTemp = asin((sin(virtLatRad) * cos(WayByRadius)) + (cos(virtLatRad) * sin(WayByRadius) * cos(headingRad)));
-		
-		//may solve E/W Greenwich problem
-		//if (virtLon > 0) {
-			virtLonRad = virtLonRad + atan2((sin(headingRad) * sin(WayByRadius) * cos(virtLatRad)), (cos(WayByRadius) - (sin(virtLatRad) * sin(virtLatRadTemp))));
-		//}
-		//else{
-		//	virtLonRad = virtLonRad - atan2((sin(headingRad) * sin(WayByRadius) * cos(virtLatRad)), (cos(WayByRadius) - (sin(virtLatRad) * sin(virtLatRadTemp))));
-		//}
+		virtLonRad = virtLonRad + atan2((sin(headingRad) * sin(WayByRadius) * cos(virtLatRad)), (cos(WayByRadius) - (sin(virtLatRad) * sin(virtLatRadTemp))));
 		virtLatRad = virtLatRadTemp;
 	
 		//radians to dec
@@ -512,12 +505,12 @@ void virtualAntennaPoint() {
 		virtLon = virtLonRad / PI180;
 
 		virtAntPosPresent = true;
-		if (GPSSet.debugmodeRAW) {
+		if (Set.debugmodeRAW) {
 			Serial.print("virtLat virtLon,");
 			Serial.print(virtLat,7); Serial.print(",");
 			Serial.print(virtLon,7); Serial.print(",");
 		}
-		if (GPSSet.debugmodeVirtAnt) {
+		if (Set.debugmodeVirtAnt) {
 			Serial.println("Virtual Antenna point calc:");
 			Serial.print("UBX1 Lat: "); Serial.print((double(UBXPVT1[UBXRingCount1].lat) / 10000000), 7); Serial.print(" virtLat: "); Serial.print(virtLat, 7);
 			Serial.print("UBX1 Lon: "); Serial.print((double(UBXPVT1[UBXRingCount1].lon) / 10000000), 7); Serial.print(" virtLon: "); Serial.println(virtLon, 7);
@@ -525,7 +518,7 @@ void virtualAntennaPoint() {
 			Serial.print(" roll: "); Serial.println(roll, 3);
 		}
 	}
-	else { if (GPSSet.debugmode||GPSSet.debugmodeVirtAnt) { Serial.println("No virtual Antenna point: lat/lon = 0"); } }
+	else { if (Set.debugmode||Set.debugmodeVirtAnt) { Serial.println("No virtual Antenna point: lat/lon = 0"); } }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -536,7 +529,7 @@ void filterPosition() {
 	if (virtAntPosPresent) { latK = virtLat; lonK = virtLon; }
 	else { latK = double(UBXPVT1[UBXRingCount1].lat) * 0.0000001; lonK = double(UBXPVT1[UBXRingCount1].lon) * 0.0000001; }
 
-	if (GPSSet.debugmodeHeading || GPSSet.debugmodeFilterPos) { Serial.print(" lat: "); Serial.print(latK, 7); }
+	if (Set.debugmodeHeading || Set.debugmodeFilterPos) { Serial.print(" lat: "); Serial.print(latK, 7); }
 
 	//Kalman filter
 	latPc = latP + latVarProcess;
@@ -556,7 +549,7 @@ void filterPosition() {
 	lonZp = lonXp;
 	lonXe = (lonG * (lonK - lonZp)) + lonXp;
 
-	if (GPSSet.debugmodeRAW) {
+	if (Set.debugmodeRAW) {
 		Serial.print("virtLat virtLon filtVirtLat FiltVirtLog,");
 		Serial.print(virtLat,8); Serial.print(",");
 		Serial.print(virtLon,8); Serial.print(",");
@@ -566,7 +559,7 @@ void filterPosition() {
 
 	virtLon = lonXe;//result
 	virtLat = latXe;//result
-	if (GPSSet.debugmodeHeading || GPSSet.debugmodeFilterPos) {
+	if (Set.debugmodeHeading || Set.debugmodeFilterPos) {
 		Serial.print(" lat filtered: "); Serial.print(virtLat, 7);
 		Serial.print(" lon: "); Serial.print(lonK, 7); Serial.print(" lon filtered: "); Serial.println(virtLon, 7);
 	}

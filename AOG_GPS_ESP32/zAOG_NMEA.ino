@@ -117,7 +117,7 @@ void buildOGI() {
 	//lat: xx min min . min/10 .. 4.5 digits
 	if (filterGPSpos || virtAntPosPresent) { templng = long(virtLat * 10000000); }
 	else { templng = UBXPVT1[UBXRingCount1].lat; }
-	if (GPSSet.debugmodeRAW) { Serial.print("buildOGI tempLat temLon,"); Serial.print(templng); Serial.print(",");}
+	if (Set.debugmodeRAW) { Serial.print("buildOGI tempLat temLon,"); Serial.print(templng); Serial.print(",");}
 	//N/S?
 	byte Sign = 0x53;//S
 	if (templng > 0) {Sign = 0x4E;}//N	
@@ -150,7 +150,7 @@ void buildOGI() {
 	//lon: xxx min min . min/10 .. 5.5 digits
 	if (filterGPSpos || virtAntPosPresent) { templng = long(virtLon * 10000000); }
 	else { templng = UBXPVT1[UBXRingCount1].lon; }
-	if (GPSSet.debugmodeRAW) { Serial.print(templng); Serial.print(","); }
+	if (Set.debugmodeRAW) { Serial.print(templng); Serial.print(","); }
 	//E/W?
 	if (templng < 0){Sign = 0x57;}//W
 	else{Sign= 0x45;	}//E
@@ -563,14 +563,14 @@ void buildVTG() {
 
 	//allways +48 to get ASCII: "0" = 48
 	double tempGPSHead;
-//	if (GPSSet.useMixedHeading) {
-//		if (GPSSet.debugmode) { Serial.print("mix Heading to OGI present: "); Serial.println(HeadingMix); }
+//	if (Set.useMixedHeading) {
+//		if (Set.debugmode) { Serial.print("mix Heading to OGI present: "); Serial.println(HeadingMix); }
 		tempGPSHead = HeadingMix; //decided in Heading calc
 /*	}
 	else {
 		if (dualGPSHeadingPresent) { tempGPSHead = HeadingRelPosNED; }
 		else {
-			if (GPSSet.debugmode) { Serial.print("VTG Heading to OGI present: "); Serial.println(HeadingVTG); }
+			if (Set.debugmode) { Serial.print("VTG Heading to OGI present: "); Serial.println(HeadingVTG); }
 			tempGPSHead = HeadingVTG;
 		}
 	}*/

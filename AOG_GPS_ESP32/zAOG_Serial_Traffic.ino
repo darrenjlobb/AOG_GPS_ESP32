@@ -24,13 +24,13 @@ void getUBX() {
 	{
 		nextUBXcount2 = (UBXRingCount2 + 1) % sizeOfUBXArray;
 		incomByte2 = Serial2.read();
-		//if (GPSSet.debugmodeUBX) { Serial.print("incom Byte2: "); Serial.print(incomByte2); }
+		//if (Set.debugmodeUBX) { Serial.print("incom Byte2: "); Serial.print(incomByte2); }
 
 		//UBX comming?
 		if (UBXDigit2 < 2) {
 			if (incomByte2 == UBX_HEADER[UBXDigit2]) {
 				UBXDigit2++;
-				//if (GPSSet.debugmodeUBX) { Serial.print("UBX2 RelPosNED started: digit  "); Serial.println(UBXDigit2 - 1); }
+				//if (Set.debugmodeUBX) { Serial.print("UBX2 RelPosNED started: digit  "); Serial.println(UBXDigit2 - 1); }
 			}
 			else
 				UBXDigit2 = 0;
@@ -39,13 +39,13 @@ void getUBX() {
 			//add incoming Byte to UBX
 			((unsigned char*)(&UBXRelPosNED[nextUBXcount2]))[UBXDigit2 - 2] = incomByte2;
 			UBXDigit2++;
-			//if (GPSSet.debugmodeUBX) { Serial.print(incomByte2); Serial.print(": incoming byte number: "); Serial.println(UBXDigit2); }
+			//if (Set.debugmodeUBX) { Serial.print(incomByte2); Serial.print(": incoming byte number: "); Serial.println(UBXDigit2); }
 
 			if (UBXDigit2 == 5) {
 
 				if (!((UBXRelPosNED[nextUBXcount2].cls == 0x01) && (UBXRelPosNED[nextUBXcount2].id == 0x3C))) {
 					//wrong sentence				
-					/*if (GPSSet.debugmodeUBX) {
+					/*if (Set.debugmodeUBX) {
 					Serial.print("UBX2 wrong sentence: digit  ");
 					Serial.print(UBXDigit2 - 1);
 					Serial.print("cls  ");
@@ -55,7 +55,7 @@ void getUBX() {
 				}*/
 					UBXDigit2 = 0;
 				}
-				else { if (GPSSet.debugmodeUBX) { Serial.println("UBX RelPosNED found"); } }
+				else { if (Set.debugmodeUBX) { Serial.println("UBX RelPosNED found"); } }
 			}//5
 			else
 			{
@@ -72,7 +72,7 @@ void getUBX() {
 							UBXchecksum2[0] += ((unsigned char*)(&UBXRelPosNED[nextUBXcount2]))[i];
 							UBXchecksum2[1] += UBXchecksum2[0];
 						}
-						/*	if (GPSSet.debugmodeUBX) {
+						/*	if (Set.debugmodeUBX) {
 								Serial.print("UBX2 Checksum0 expected "); Serial.print(UBXchecksum2[0]);
 								Serial.print("  incomming Checksum0: "); Serial.println(UBXRelPosNED[nextUBXcount2].CK0);
 								Serial.print("UBX2 Checksum1 expected "); Serial.print(UBXchecksum2[1]);
@@ -81,18 +81,18 @@ void getUBX() {
 							*/
 						if ((UBXRelPosNED[nextUBXcount2].CK0 == UBXchecksum2[0]) && (UBXRelPosNED[nextUBXcount2].CK1 == UBXchecksum2[1])) {
 							//checksum OK
-							if (GPSSet.checkUBXFlags) {
+							if (Set.checkUBXFlags) {
 								if (bitRead(UBXRelPosNED[nextUBXcount2].flags, 8)) {
 									//flag: heading OK
 									existsUBXRelPosNED = true;
 									UBXRingCount2 = nextUBXcount2;
 									UBXDigit2 = 0;
 									UBXLenght2 = 100;
-									if (GPSSet.debugmodeUBX) {
+									if (Set.debugmodeUBX) {
 										Serial.print("got RelPosNED. Heading: "); Serial.print((UBXRelPosNED[nextUBXcount2].relPosHeading * 0.00001), 2);
 										Serial.print(" down vector (cm): "); Serial.println((float(UBXRelPosNED[nextUBXcount2].relPosD) + (float(UBXRelPosNED[nextUBXcount2].relPosHPD) * 0.01)), 2);
 									}
-									if (GPSSet.debugmodeRAW) {
+									if (Set.debugmodeRAW) {
 										Serial.print("SerIn: RelPosNED heading down dist flags"); Serial.print(",");
 										Serial.print(UBXRelPosNED[UBXRingCount2].relPosHeading); Serial.print(",");
 										Serial.print((float(UBXRelPosNED[nextUBXcount2].relPosD) + (float(UBXRelPosNED[nextUBXcount2].relPosHPD) * 0.01)), 2); Serial.print(",");
@@ -100,18 +100,18 @@ void getUBX() {
 										Serial.print(UBXRelPosNED[UBXRingCount2].flags); Serial.print(",");
 									}
 								}
-								else { if (GPSSet.debugmodeUBX) { Serial.println("UBXRelPosNED flag heading: NOT valid, checksum OK; sentence NOT used"); } }
+								else { if (Set.debugmodeUBX) { Serial.println("UBXRelPosNED flag heading: NOT valid, checksum OK; sentence NOT used"); } }
 							}
 							else {//don't check UBX flags, checksum ok
 								existsUBXRelPosNED = true;
 								UBXRingCount2 = nextUBXcount2;
 								UBXDigit2 = 0;
 								UBXLenght2 = 100;
-								if (GPSSet.debugmodeUBX) {
+								if (Set.debugmodeUBX) {
 									Serial.print("got RelPosNED. Heading: "); Serial.print((UBXRelPosNED[nextUBXcount2].relPosHeading * 0.00001), 2);
 									Serial.print(" down vector (cm): "); Serial.println((float(UBXRelPosNED[nextUBXcount2].relPosD) + (float(UBXRelPosNED[nextUBXcount2].relPosHPD) * 0.01)), 2);
 								}
-								if (GPSSet.debugmodeRAW) {
+								if (Set.debugmodeRAW) {
 									Serial.print("SerIn: RelPosNED heading down dist flags"); Serial.print(",");
 									Serial.print(UBXRelPosNED[UBXRingCount2].relPosHeading); Serial.print(",");
 									Serial.print(UBXRelPosNED[UBXRingCount2].relPosD); Serial.print("."); Serial.print(UBXRelPosNED[nextUBXcount2].relPosHPD); Serial.print(",");
@@ -123,7 +123,7 @@ void getUBX() {
 						else { //checksum wrong							
 							UBXDigit2 = 0;
 							UBXLenght2 = 100;
-							if (GPSSet.debugmodeUBX) { Serial.println("UBX2 RelPosNED checksum invalid"); }
+							if (Set.debugmodeUBX) { Serial.println("UBX2 RelPosNED checksum invalid"); }
 						}
 					}//UBX complete
 					else
@@ -144,7 +144,7 @@ void getUBX() {
 		nextUBXcount1 = (UBXRingCount1 + 1) % sizeOfUBXArray;
 
 		incomByte1 = Serial1.read();
-		//if (GPSSet.debugmodeUBX) { Serial.print("incom Byte: "); Serial.print(incomByte1); Serial.print("UBXRingCount1: "); Serial.print(UBXRingCount1); Serial.print(" nextUBXCount1: "); Serial.println(nextUBXcount1); }
+		//if (Set.debugmodeUBX) { Serial.print("incom Byte: "); Serial.print(incomByte1); Serial.print("UBXRingCount1: "); Serial.print(UBXRingCount1); Serial.print(" nextUBXCount1: "); Serial.println(nextUBXcount1); }
 
 		// ai, 07.10.2020: use the GGA Message to determine Fix-Quality
 		if (incomByte1 == '$') {
@@ -174,7 +174,7 @@ void getUBX() {
 		if (UBXDigit1 < 2) {
 			if (incomByte1 == UBX_HEADER[UBXDigit1]) {
 				UBXDigit1++;
-				//if (GPSSet.debugmodeUBX) { Serial.print("UBX1 started: digit  "); Serial.println(UBXDigit1 - 1); }
+				//if (Set.debugmodeUBX) { Serial.print("UBX1 started: digit  "); Serial.println(UBXDigit1 - 1); }
 			}
 			else
 				UBXDigit1 = 0;
@@ -183,7 +183,7 @@ void getUBX() {
 			//add incoming Byte to UBX
 			((unsigned char*)(&UBXPVT1[nextUBXcount1]))[UBXDigit1 - 2] = incomByte1;
 			UBXDigit1++;
-			//if (GPSSet.debugmodeUBX) { Serial.print(incomByte1); Serial.print(": incoming byte number: "); Serial.println(UBXDigit1); }
+			//if (Set.debugmodeUBX) { Serial.print(incomByte1); Serial.print(": incoming byte number: "); Serial.println(UBXDigit1); }
 
 			if (UBXDigit1 == 5) {
 				/*if (debugmode) {
@@ -225,7 +225,7 @@ void getUBX() {
 						if ((UBXPVT1[nextUBXcount1].CK0 == UBXchecksum1[0]) && (UBXPVT1[nextUBXcount1].CK1 == UBXchecksum1[1])) {
 							UBXDigit1 = 0;
 
-							if (GPSSet.debugmodeRAW) {
+							if (Set.debugmodeRAW) {
 								Serial.print("SerIn: #lstUBX #newUBX newUBX lat lon"); Serial.print(",");
 								Serial.print(UBXRingCount1); Serial.print(",");
 								Serial.print(nextUBXcount1); Serial.print(",");
@@ -240,12 +240,12 @@ void getUBX() {
 
 							UBXRingCount1 = nextUBXcount1;
 							UBXLenght1 = 100;
-							if (GPSSet.debugmodeUBX) {
+							if (Set.debugmodeUBX) {
 								Serial.print("got UBX1 PVT lat: "); Serial.print(UBXPVT1[nextUBXcount1].lat);
 								Serial.print(" lon: "); Serial.println(UBXPVT1[nextUBXcount1].lon);
 							}
 						}
-						else { if (GPSSet.debugmodeUBX) { Serial.println("UBX1 PVT checksum invalid"); } }
+						else { if (Set.debugmodeUBX) { Serial.println("UBX1 PVT checksum invalid"); } }
 
 					}//UBX complete
 					else
