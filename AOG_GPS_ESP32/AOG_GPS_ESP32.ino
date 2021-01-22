@@ -75,8 +75,8 @@ struct set {
     char NtripHost[40] = "www.sapos-bw-ntrip.de";    // Server IP or URL
     int  NtripPort = 2101;                // Server Port
     char NtripMountpoint[40] = "SAPOS-LW-MSM";   // Mountpoint
-    char NtripUser[40] = "LW077_2";     // Username
-    char NtripPassword[40] = "bbtawh";    // Password
+    char NtripUser[40] = "";     // Username
+    char NtripPassword[40] = "";    // Password
 
     byte NtripSendWhichGGASentence = 2; // 0 = No Sentence will be sended
                               // 1 = fixed Sentence from GGAsentence below will be sended
