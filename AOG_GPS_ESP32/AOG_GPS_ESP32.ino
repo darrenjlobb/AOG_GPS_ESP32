@@ -1,5 +1,5 @@
 //ESP32 programm for UBLOX receivers to send NMEA to AgOpenGPS or other program 
-//Version 16. Januar 2021 Ethernet support, NTRIP client, multiple WiFi networks
+//Version 19. Oktober 2020 send data 2x, UDP call changed, Fix type from GGA (thanks to ai)
 
 //works with 1 or 2 receivers
 
@@ -49,8 +49,8 @@ struct set {
 
     byte Button_WiFi_rescan_PIN = 4;  //Button to rescan/reconnect WiFi networks / push to GND
 
-    byte LEDWiFi_PIN = 2;             // WiFi Status LED 0 = off
-    byte LEDWiFi_ON_Level = HIGH;     //HIGH = LED on high, LOW = LED on low
+    byte LEDWiFi_PIN = 2;      // WiFi Status LED 0 = off
+    byte LEDWiFi_ON_Level = HIGH;    //HIGH = LED on high, LOW = LED on low
 
     //WiFi---------------------------------------------------------------------------------------------
 #if HardwarePlatform == 0
@@ -59,26 +59,28 @@ struct set {
     char password1[24] = "";                 // WiFi network password//Accesspoint name and password
     char ssid2[24] = "Matthias Cat S62 Pro"; // WiFi network Client name
     char password2[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid3[24] = "Test";                 // WiFi network Client name
+    char ssid3[24] = "Fendt_209V";           // WiFi network Client name
     char password3[24] = "";                 // WiFi network password//Accesspoint name and password
     char ssid4[24] = "CAT S41";              // WiFi network Client name
     char password4[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid5[24] = "";                     // WiFi network Client name
+    char ssid5[24] = "WLANHammer5";          // WiFi network Client name
     char password5[24] = "";                 // WiFi network password//Accesspoint name and password
 
-    char ssid_ap[24] = "GPS_unit_F9P_Net";   // name of Access point, if no WiFi found, NO password!!
-    int timeoutRouter = 90;                  //time (s) to search for existing WiFi, than starting Accesspoint 
+    char ssid_ap[24] = "GPS_unit_F9P_Net";  // name of Access point, if no WiFi found, NO password!!
+    int timeoutRouter = 30;                //time (s) to search for existing WiFi, than starting Accesspoint 
 
     byte timeoutWebIO = 255;                 //time (min) afterwards webinterface is switched off
      
     // Ntrip Caster Data
-    char NtripHost[40] = "www.sapos-bw-ntrip.de";   // Server IP or URL
-    int  NtripPort = 2101;                          // Server Port
-    char NtripMountpoint[40] = "SAPOS-LW-MSM";      // Mountpoint
-    char NtripUser[40] = "test";                    // Username
-    char NtripPassword[40] = "pass";                // Password
+    char NtripHost[40] = "www.sapos-bw-ntrip.de";    // Server IP or URL
+    int  NtripPort = 2101;                // Server Port
+    char NtripMountpoint[40] = "SAPOS-LW-MSM";   // Mountpoint
+    char NtripUser[40] = "LW077_2";     // Username
+    char NtripPassword[40] = "bbtawh";    // Password
 
-    byte NtripSendWhichGGASentence = 2; // 0 = No Sentence will be sent / 1 = fixed Sentence from GGAsentence below will be sent / 2 = GGA from GPS will be sent
+    byte NtripSendWhichGGASentence = 2; // 0 = No Sentence will be sended
+                              // 1 = fixed Sentence from GGAsentence below will be sended
+                              // 2 = GGA from GPS will be sended
 
     char NtripFixGGASentence[100] = "$GPGGA,051353.171,4751.637,N,01224.003,E,1,12,1.0,0.0,M,0.0,M,,*6B"; //hc create via www.nmeagen.org
 
@@ -87,13 +89,13 @@ struct set {
 
 
     //static IP
-    byte WiFi_myip[4] = { 192, 168, 1, 79 };    // WiFi IP for Roof module and IP to access Webinterface
-    byte Eth_myip[4] = { 192, 168, 1, 80 };     // Ethernet IP for Roof module 
-    byte WiFi_gwip[4] = { 192, 168, 1, 1 };     // Gateway IP only used if Accesspoint created
+    byte WiFi_myip[4] = { 192, 168, 1, 79 };     // Roofcontrol module 
+    byte Eth_myip[4] = { 192, 168, 1, 80 };     // Roofcontrol module 
+    byte WiFi_gwip[4] = { 192, 168, 1, 1 };      // Gateway IP only used if Accesspoint created
     byte mask[4] = { 255, 255, 255, 0 };
-    byte myDNS[4] = { 8, 8, 8, 8 };             //optional
+    byte myDNS[4] = { 8, 8, 8, 8 };         //optional
     byte WiFi_ipDestination[4] = { 192, 168, 1, 255 };//IP address to send UDP data to
-    byte Eth_ipDestination[4]  = { 192, 168, 1, 255 };//IP address to send UDP data to
+    byte Eth_ipDestination[4] = { 192, 168, 1, 255 };//IP address to send UDP data to
 
     unsigned int portMy = 5544;             //this is port of this module: Autosteer = 5577 IMU = 5566 GPS = 
     unsigned int portAOG = 8888;            //port to listen for AOG
@@ -104,8 +106,8 @@ struct set {
     //Antennas position
     double AntDist = 74.0;                //cm distance between Antennas
     double AntHight = 228.0;              //cm hight of Antenna
-    double virtAntLeft = 42.0;            //cm to move virtual Antenna to the left (was renamed, keep your settings, name of direction was wrong)
-    double virtAntForew = 60.0;           //cm to move virtual Antenna foreward
+    double virtAntLeft = 42.0;           //cm to move virtual Antenna to the left (was renamed, keep your settings, name of direction was wrong)
+    double virtAntForew = 60.0;            //cm to move virtual Antenna foreward
     double headingAngleCorrection = 90;
 
     double AntDistDeviationFactor = 1.2;  // factor (>1), of whom lenght vector from both GPS units can max differ from AntDist before stop heading calc
@@ -117,9 +119,11 @@ struct set {
 
     byte MaxHeadChangPerSec = 30;         // degrees that heading is allowed to change per second
    
-    byte DataTransVia = 7;                //transfer data via 0 = USB / 7 = WiFi UDP / 8 = WiFi UDP 2x (= send every packet twice) / 10 = Ethernet UDP
+    byte DataTransVia = 7;// 7;                //transfer data via 0 = USB / 7 = WiFi UDP / 8 = WiFi UDP 2x / 10 = Ethernet UDP
 
-    byte NtripClientBy = 2;               //NTRIP client 0: off /1: listens for AOG NTRIP to UDP (WiFi/Ethernet port 2233) or USB serial /2: use ESP32 WiFi NTIRP client
+    byte NtripClientBy = 2;               //NTRIP client 0:off 
+                                          //1: listens for AOG NTRIP to UDP (WiFi/Ethernet) or USB serial 
+                                          //2: use ESP32 WiFi NTIRP client
 
     byte sendOGI = 1;                     //1: send NMEA message 0: off
     byte sendVTG = 0;                     //1: send NMEA message 0: off
@@ -127,7 +131,7 @@ struct set {
     byte sendHDT = 0;                     //1: send NMEA message 0: off
 
 
-    bool debugmode = true;
+    bool debugmode = false;
     bool debugmodeUBX = false;
     bool debugmodeHeading = false;
     bool debugmodeVirtAnt = false;
@@ -343,8 +347,10 @@ NAV_RELPOSNED UBXRelPosNED[sizeOfUBXArray];
 //#include <base64.hpp>
 //#include "zAOG_NTRIPClient.h"
 #include <base64.h>
-#include <ping.h>
-#include <ESP32Ping.h>
+//#include <ping.h>
+//#include <ESP32Ping.h>
+#include "zAOG_ESP32Ping.h"
+#include "zAOG_ping.h"
 
 //instances----------------------------------------------------------------------------------------
 AsyncUDP WiFi_udpRoof;
@@ -454,7 +460,7 @@ void setup()
   
     if (Set.NtripClientBy == 2) {
      //   task_NTRIP_running = true;
-        xTaskCreatePinnedToCore(NTRIPCode, "Core1", 10000, NULL, 1, &Core1, 1);
+        xTaskCreatePinnedToCore(NTRIPCode, "Core1", 3072, NULL, 1, &Core1, 1);
         delay(500);
         //create a task that will be executed in the Core2code() function, with priority 1 and executed on core 1
         //xTaskCreatePinnedToCore(Core2code, "Core2", 10000, NULL, 1, &Core2, 1);
@@ -651,7 +657,7 @@ void loop()
                     WiFi_reconnect_step = 0;
                     if ((Set.NtripClientBy == 2) && (!task_NTRIP_running)) {
                         {
-                            xTaskCreatePinnedToCore(NTRIPCode, "Core1", 10000, NULL, 1, &Core1, 1);
+                            xTaskCreatePinnedToCore(NTRIPCode, "Core1", 3072, NULL, 1, &Core1, 1);
                             delay(500);
                         }
                     }
@@ -686,7 +692,7 @@ void loop()
                     WiFi_lost_time = 0;
                     Ntrip_restart = 1;
                     if (Set.NtripClientBy == 2) {
-                        xTaskCreatePinnedToCore(NTRIPCode, "Core1", 10000, NULL, 1, &Core1, 1);
+                        xTaskCreatePinnedToCore(NTRIPCode, "Core1", 3072, NULL, 1, &Core1, 1);
                         delay(500);
                     }
                 }

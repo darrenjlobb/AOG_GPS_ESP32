@@ -48,6 +48,7 @@ void do_WiFi_NTRIP() {
     }
     if (!getRtcmData()) {
         Serial.print("\nCan not reach hoster, internet connection broken\n");
+        //vTaskDelay(5000 / portTICK_PERIOD_MS);
         delay(5000);
         Serial.print("\nTrying to reconnect\n");
         Ntrip_restart++;
@@ -63,6 +64,7 @@ bool getSourcetable() {
         Serial.println("NTRIP Host connection failed");
         Serial.println("Can not connect to NTRIP Hoster");
         Serial.println("Check Network Name and Port");
+        //vTaskDelay(2000 / portTICK_PERIOD_MS);
         delay(2000);
         return false;
     }
@@ -113,6 +115,7 @@ bool startStream() {
         Serial.print("NTRIP Host connection failed\n");
         Serial.print("Can not connect to NTRIP Hoster\n");
         Serial.print("Check Network Name and Port\n");
+        //vTaskDelay(2000 / portTICK_PERIOD_MS);
         delay(2000);
         return false;
     }
@@ -146,6 +149,7 @@ bool startStream() {
         if (millis() - timeout > 15000) {
             Serial.println(">>> Client Timeout - no response from host");
             WiFi_Ntrip_cl.stop();
+           // vTaskDelay(2000 / portTICK_PERIOD_MS);
             delay(2000);
             return false;
         }

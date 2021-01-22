@@ -290,7 +290,7 @@ void process_Request()
                 if (!task_NTRIP_running) {
                     Ntrip_restart = 1;
                     NtripDataTime = millis();
-                    xTaskCreatePinnedToCore(NTRIPCode, "Core1", 10000, NULL, 1, &Core1, 1);
+                    xTaskCreatePinnedToCore(NTRIPCode, "Core1", 3072, NULL, 1, &Core1, 1);
                     delay(500);
                 }
                 break;
