@@ -5,6 +5,10 @@ void doSerialNTRIP() {
 		incomingByte = Serial.read();
 		Serial1.write(incomingByte);
 	}
+	if (incomingByte != 0) {
+		NtripDataTime = millis();
+		if (Set.debugmode) { Serial.println("got USB data"); }
+	}
 }
 
 
