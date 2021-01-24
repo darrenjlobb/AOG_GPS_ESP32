@@ -515,7 +515,7 @@ void loop()
 
     //transfer data via 0 = USB
     if (Set.DataTransVia < 5) {//use USB
-        if ((Set.DataTransVia == 0) && (Set.NtripClientBy == 1)) { doSerialNTRIP(); } //gets USB NTRIP and sends to serial 1  
+        if (Set.NtripClientBy == 1) { doSerialNTRIP(); } //gets USB NTRIP and sends to serial 1  
        //send USB
         if ((newOGI) && (Set.sendOGI == 1)) {
             for (byte n = 0; n < (OGIdigit - 1); n++) { Serial.write(OGIBuffer[n]); }
