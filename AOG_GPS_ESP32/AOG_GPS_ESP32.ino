@@ -590,7 +590,7 @@ void loop()
             for (byte n = 0; n < OGIdigit; n++) {
                 Eth_udpRoof.print(char(OGIBuffer[n]));
             }
-            Eth_udpNtrip.endPacket();
+            Eth_udpRoof.endPacket();
             newOGI = false;
         }
         if (newGGA) {
@@ -606,7 +606,7 @@ void loop()
             for (byte n = 0; n < VTGdigit; n++) {
                 Eth_udpRoof.print(char(VTGBuffer[n]));
             }
-            Eth_udpNtrip.endPacket();
+            Eth_udpRoof.endPacket();
             newVTG = false;
         }
         if (newHDT) {
@@ -614,7 +614,7 @@ void loop()
             for (byte n = 0; n < HDTdigit; n++) {
                 Eth_udpRoof.print(char(HDTBuffer[n]));
             }
-            Eth_udpNtrip.endPacket();
+            Eth_udpRoof.endPacket();
             newHDT = false;
         }
     }
