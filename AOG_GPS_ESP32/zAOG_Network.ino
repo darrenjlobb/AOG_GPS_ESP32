@@ -75,11 +75,11 @@ void WiFi_Start_STA() {
         Serial.print("Connected IP - Address : ");
         IPAddress myIP = WiFi.localIP();
         Serial.println(myIP);
-        IPAddress gwIP = WiFi.gatewayIP();
         //after connecting get IP from router -> change it to x.x.x.IP Ending (from settings)
         myIP[3] = Set.WiFi_myip[3]; //set ESP32 IP to x.x.x.myIP_ending
         Serial.print("changing IP to: ");
-        Serial.println(myIP);
+        Serial.println(myIP);        
+        IPAddress gwIP = WiFi.gatewayIP();
         if (!WiFi.config(myIP, gwIP, Set.mask, gwIP)) { Serial.println("Network failed to configure"); }
         delay(200);
         Serial.print("Connected IP - Address : ");
@@ -197,7 +197,7 @@ void WiFi_Start_AP() {
 //-------------------------------------------------------------------------------------------------
 
 void Eth_Start() {
-    Ethernet.init(5);
+    Ethernet.init(Set.Eth_CS_PIN);
     delay(50);
     Ethernet.begin(mac);
     delay(200);
@@ -244,7 +244,7 @@ void doEthUDPNtrip() {
     packetLenght = Eth_udpNtrip.parsePacket();
     if (packetLenght)
 		{
-			if (Set.debugmode) { Serial.println("got NTRIP data"); }
+			if (Set.debugmode) { Serial.println("got NTRIP data via Ethernet"); }
             Eth_udpNtrip.read(packetBuffer, packetLenght);
 			for (unsigned int i = 0; i < packetLenght; i++)
 			{
@@ -257,7 +257,7 @@ void doEthUDPNtrip() {
 	if ((NtripDataTime + 30000) < millis())
 	{
 		NtripDataTime = millis();
-		Serial.println("no NTRIP from AOG for more than 30s");
+		Serial.println("no NTRIP from AOG for more than 30s via Ethernet");
 	}
 }
 

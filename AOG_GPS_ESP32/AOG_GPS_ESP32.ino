@@ -47,6 +47,8 @@ struct set {
     byte RX2 = 25;                    //left F9P TX1 Heading
     byte TX2 = 17;                    //left F9P RX1 Heading
 
+    byte Eth_CS_PIN = 5;              //CS PIN with SPI Ethernet hardware  SPI config: MOSI 23 / MISO 19 / CLK18 / CS5
+
     byte Button_WiFi_rescan_PIN = 4;  //Button to rescan/reconnect WiFi networks / push to GND
 
     byte LEDWiFi_PIN = 2;      // WiFi Status LED 0 = off
@@ -57,13 +59,13 @@ struct set {
     //tractors WiFi or mobile hotspots
     char ssid1[24] = "Fendt_209V";           // WiFi network Client name
     char password1[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid2[24] = "Matthias Cat S62 Pro"; // WiFi network Client name
+    char ssid2[24] = "Matthias Cat S62 Pro";// "Fendt_209V";           // WiFi network Client name
     char password2[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid3[24] = "Fendt_209V";           // WiFi network Client name
+    char ssid3[24] = "Fendt_209V";// "Fendt_209V";           // WiFi network Client name
     char password3[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid4[24] = "CAT S41";              // WiFi network Client name
+    char ssid4[24] = "CAT S41";// "Fendt_209V";           // WiFi network Client name
     char password4[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid5[24] = "WLANHammer5";          // WiFi network Client name
+    char ssid5[24] = "WLANHammer5";// "Fendt_209V";           // WiFi network Client name
     char password5[24] = "";                 // WiFi network password//Accesspoint name and password
 
     char ssid_ap[24] = "GPS_unit_F9P_Net";  // name of Access point, if no WiFi found, NO password!!
@@ -121,7 +123,7 @@ struct set {
    
     byte DataTransVia = 7;// 7;                //transfer data via 0 = USB / 7 = WiFi UDP / 8 = WiFi UDP 2x / 10 = Ethernet UDP
 
-    byte NtripClientBy = 2;               //NTRIP client 0:off 
+    byte NtripClientBy = 0;               //NTRIP client 0:off 
                                           //1: listens for AOG NTRIP to UDP (WiFi/Ethernet) or USB serial 
                                           //2: use ESP32 WiFi NTIRP client
 
@@ -131,18 +133,18 @@ struct set {
     byte sendHDT = 0;                     //1: send NMEA message 0: off
 
 
-    bool debugmode = false;
+    bool debugmode = true;
     bool debugmodeUBX = false;
     bool debugmodeHeading = false;
     bool debugmodeVirtAnt = false;
     bool debugmodeFilterPos = false;
-    bool debugmodeNTRIP = false;
+    bool debugmodeNTRIP = true;
     bool debugmodeRAW = false;
 
 }; set Set;
 
 
-bool EEPROM_clear = false;  //set to true when changing settings to write them as default values: true -> flash -> boot -> false -> flash again
+bool EEPROM_clear = true;  //set to true when changing settings to write them as default values: true -> flash -> boot -> false -> flash again
 
 
 
@@ -426,7 +428,7 @@ void setup()
         // UDP NTRIP packet handling
         WiFi_udpNtrip.onPacket([](AsyncUDPPacket packet)
             {
-                if (Set.debugmode) { Serial.println("got NTRIP data"); }
+                if (Set.debugmode) { Serial.println("got NTRIP data via WiFi"); }
                 for (unsigned int i = 0; i < packet.length(); i++)
                 {
                     Serial1.write(packet.data()[i]);
@@ -598,7 +600,7 @@ void loop()
             for (byte n = 0; n < GGAdigit; n++) {
                 Eth_udpRoof.print(char(GGABuffer[n]));
             }
-            Eth_udpNtrip.endPacket();
+            Eth_udpRoof.endPacket();
             newGGA = false;
         }
         if (newVTG) {
@@ -648,7 +650,7 @@ void loop()
     if (WiFi_reconnect_step > 0) {
         if (now > (WiFi_lost_time + 500)) {
             //do every second
-            Serial.print("WiFi_recconet_step: "); Serial.println(WiFi_reconnect_step);
+            Serial.print("WiFi_reconnect_step: "); Serial.println(WiFi_reconnect_step);
             switch (WiFi_reconnect_step) {
             case 1:
                 if (Ping.ping(Set.WiFi_gwip)) { //retry to connect NTRIP, WiFi is available
@@ -684,6 +686,7 @@ void loop()
                 WiFi_Start_STA();
                 delay(100);
                 WiFi_reconnect_step++;
+                WiFi_lost_time = now;
                 break;
             case 6:
                 delay(100);
@@ -696,7 +699,11 @@ void loop()
                         delay(500);
                     }
                 }
-                else Serial.print("Error: WiFi Status: "); Serial.println(WiFi.status());
+                else {
+                    Serial.print("Error: WiFi Status: "); Serial.println(WiFi.status());
+                    WiFi_reconnect_step = 1;
+                    WiFi_lost_time = now;
+                }
                 break;
             }
         }
@@ -715,17 +722,19 @@ void loop()
         }
     }
 
-    if (now > (NtripDataTime + 30000))
-    {
-        NtripDataTime = millis();
-        Serial.println("no NTRIP for more than 30s");
-        /*      if (Set.NtripClientBy == 2) {
-                  WiFi_Ntrip_cl.stop();
-                  Serial.println("trying to reconnect to NTRIP server");
-                  delay(200);
-                  connectTo_WiFi_Ntrip();
-              }
-          */
+    if (Set.NtripClientBy > 0) {
+        if (now > (NtripDataTime + 30000))
+        {
+            NtripDataTime = millis();
+            Serial.println("no NTRIP for more than 30s");
+            /*      if (Set.NtripClientBy == 2) {
+                      WiFi_Ntrip_cl.stop();
+                      Serial.println("trying to reconnect to NTRIP server");
+                      delay(200);
+                      connectTo_WiFi_Ntrip();
+                  }
+              */
+        }
     }
 #endif
 
