@@ -7,7 +7,7 @@ void doSerialNTRIP() {
 	}
 	if (incomingByte != 0) {
 		NtripDataTime = millis();
-		if (Set.debugmode) { Serial.println("got USB data"); }
+		if (Set.debugmode) { Serial.println("got NTRIP data via USB"); }
 	}
 }
 

@@ -469,9 +469,11 @@ void make_HTML01() {
     strcat(HTML_String,"supports data via USB, WiFi/Ethernet UDP, dual antenna, heading/roll filter and postion correction<br><br>");
     strcat(HTML_String, "<b>Transfers NTRIP data from AOG port ");
     strcati(HTML_String, Set.AOGNtripPort);
-    strcat(HTML_String," to UBlox receiver</b><br><br>");
-    strcat(HTML_String, "more settings like IPs, UPD ports... in setup zone of INO code<br>");
-    strcat(HTML_String, "(Rev. 4.5 - 15. Januar 2021 by MTZ8302 Webinterface by WEDER)<br><hr>");
+    strcat(HTML_String," to UBlox receiver,</b><br>or gets NTRIP with ESP32 NTIP client.<br><br>");
+    strcat(HTML_String, "more settings like IPs, UPD ports... in setup zone of INO code<br><br>Version: ");
+    strcati(HTML_String, vers_nr);
+    strcat(HTML_String, VersionTXT);
+    strcat(HTML_String, "<br><hr>");
 
 
     //---------------------------------------------------------------------------------------------  

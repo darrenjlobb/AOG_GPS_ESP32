@@ -1,5 +1,7 @@
 //ESP32 programm for UBLOX receivers to send NMEA to AgOpenGPS or other program 
-//Version 19. Oktober 2020 send data 2x, UDP call changed, Fix type from GGA (thanks to ai)
+
+byte vers_nr = 46;
+char VersionTXT[120] = " - 25. Januar 2020 by MTZ8302<br>(Ethernet support, NTRIP client for ESP32, multiple WiFi networks)";
 
 //works with 1 or 2 receivers
 
@@ -57,11 +59,11 @@ struct set {
     //WiFi---------------------------------------------------------------------------------------------
 #if HardwarePlatform == 0
     //tractors WiFi or mobile hotspots
-    char ssid1[24] = "Fendt_209V";           // WiFi network Client name
+    char ssid1[24] =  "Fendt_209V";           // WiFi network Client name
     char password1[24] = "";                 // WiFi network password//Accesspoint name and password
     char ssid2[24] = "Matthias Cat S62 Pro";// "Fendt_209V";           // WiFi network Client name
     char password2[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid3[24] = "Fendt_209V";// "Fendt_209V";           // WiFi network Client name
+    char ssid3[24] =  "Fendt_209V";           // WiFi network Client name
     char password3[24] = "";                 // WiFi network password//Accesspoint name and password
     char ssid4[24] = "CAT S41";// "Fendt_209V";           // WiFi network Client name
     char password4[24] = "";                 // WiFi network password//Accesspoint name and password
@@ -69,7 +71,7 @@ struct set {
     char password5[24] = "";                 // WiFi network password//Accesspoint name and password
 
     char ssid_ap[24] = "GPS_unit_F9P_Net";  // name of Access point, if no WiFi found, NO password!!
-    int timeoutRouter = 30;                //time (s) to search for existing WiFi, than starting Accesspoint 
+    int timeoutRouter = 20;                //time (s) to search for existing WiFi, than starting Accesspoint 
 
     byte timeoutWebIO = 255;                 //time (min) afterwards webinterface is switched off
      
@@ -123,9 +125,7 @@ struct set {
    
     byte DataTransVia = 7;// 7;                //transfer data via 0 = USB / 7 = WiFi UDP / 8 = WiFi UDP 2x / 10 = Ethernet UDP
 
-    byte NtripClientBy = 0;               //NTRIP client 0:off 
-                                          //1: listens for AOG NTRIP to UDP (WiFi/Ethernet) or USB serial 
-                                          //2: use ESP32 WiFi NTIRP client
+    byte NtripClientBy = 1;               //NTRIP client 0:off /1: listens for AOG NTRIP to UDP (WiFi/Ethernet) or USB serial /2: use ESP32 WiFi NTIRP client
 
     byte sendOGI = 1;                     //1: send NMEA message 0: off
     byte sendVTG = 0;                     //1: send NMEA message 0: off
@@ -133,18 +133,18 @@ struct set {
     byte sendHDT = 0;                     //1: send NMEA message 0: off
 
 
-    bool debugmode = true;
+    bool debugmode = false;
     bool debugmodeUBX = false;
     bool debugmodeHeading = false;
     bool debugmodeVirtAnt = false;
     bool debugmodeFilterPos = false;
-    bool debugmodeNTRIP = true;
+    bool debugmodeNTRIP = false;
     bool debugmodeRAW = false;
 
 }; set Set;
 
 
-bool EEPROM_clear = true;  //set to true when changing settings to write them as default values: true -> flash -> boot -> false -> flash again
+bool EEPROM_clear = false;  //set to true when changing settings to write them as default values: true -> flash -> boot -> false -> flash again
 
 
 
@@ -203,10 +203,10 @@ double HeadingQuotaVTG = 0.5;
 //WIFI+Ethernet
 IPAddress WiFi_ipDestination,Eth_ipDestination; //set in network.ino
 byte WiFi_netw_nr = 0 , my_WiFi_Mode = 0;   // WIFI_STA = 1 = Workstation  WIFI_AP = 2  = Accesspoint
-unsigned int packetLenght = 0;
+
 bool Ethernet_running = false, WiFi_STA_running = false;
 // buffers for receiving and sending data
-char packetBuffer[300];
+char packetBuffer[512];//300
 
 
 //NTRIP
@@ -405,7 +405,8 @@ void setup()
     restoreEEprom();
     delay(60);
 
-    if (Set.DataTransVia == 10) { Eth_Start(); } //start Ethernet
+    //start Ethernet
+    if (Set.DataTransVia == 10) { Eth_Start(); } 
         
     //start WiFi
     WiFi_Start_STA(); //scans for known WiFi Networks and trys to connect
@@ -451,7 +452,7 @@ void setup()
   
     //start Server for Webinterface
     WiFi_StartServer();
- //   if (Set.NtripClientBy == 2) connectTo_WiFi_Ntrip();
+
 
     delay(50);
     WebIOTimeOut = millis() + (long(Set.timeoutWebIO) * 60000);
@@ -470,6 +471,7 @@ void setup()
         //------------------------------------------------------------------------------------------------------------
     }
 
+    NtripDataTime = millis();
 #endif
 
 }
@@ -542,86 +544,91 @@ void loop()
     }
 
 #if HardwarePlatform == 0
-    if ((Set.DataTransVia > 5) && (Set.DataTransVia < 10)) {//use WiFi
-        //send WiFi UDP // WiFi UDP NTRIP via AsyncUDP: only called once, works with .onPacket
-        if ((newOGI) && (Set.sendOGI == 1)) {
-            WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination);
-            if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
-            if (Set.debugmodeRAW) {
-                Serial.print("millis,"); Serial.print(millis()); Serial.print(",");
-                Serial.print("UBXRingCount1 OGIfromUBX PAOGI,");
-                Serial.print(UBXRingCount1); Serial.print(",");
-                Serial.print(OGIfromUBX); Serial.print(",");
-                Serial.print("DualGPSPres RollPres VirtAntPres DrivDir FilterPos,");
-                Serial.print(dualGPSHeadingPresent); Serial.print(",");
-                Serial.print(rollPresent); Serial.print(",");
-                Serial.print(virtAntPosPresent); Serial.print(",");
-                Serial.print(drivDirect); Serial.print(",");
-                Serial.print(filterGPSpos); Serial.print(",");
-                Serial.print("PVThead RelPosNEDhead,");
-                Serial.print(UBXPVT1[UBXRingCount1].headMot); Serial.print(",");
-                Serial.print(UBXRelPosNED[UBXRingCount2].relPosHeading); Serial.print(",");
-                Serial.print("PVTlat PVTlon,");
-                Serial.print(UBXPVT1[UBXRingCount1].lat); Serial.print(",");
-                Serial.print(UBXPVT1[UBXRingCount1].lon); Serial.print(",");
-                for (byte N = 0; N < OGIdigit; N++) { Serial.write(OGIBuffer[N]); }
+    else {
+        //use WiFi
+        if (Set.DataTransVia < 10) {
+            //send WiFi UDP // WiFi UDP NTRIP via AsyncUDP: only called once, works with .onPacket
+            if ((newOGI) && (Set.sendOGI == 1)) {
+                WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination);
+                if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
+                if (Set.debugmodeRAW) {
+                    Serial.print("millis,"); Serial.print(millis()); Serial.print(",");
+                    Serial.print("UBXRingCount1 OGIfromUBX PAOGI,");
+                    Serial.print(UBXRingCount1); Serial.print(",");
+                    Serial.print(OGIfromUBX); Serial.print(",");
+                    Serial.print("DualGPSPres RollPres VirtAntPres DrivDir FilterPos,");
+                    Serial.print(dualGPSHeadingPresent); Serial.print(",");
+                    Serial.print(rollPresent); Serial.print(",");
+                    Serial.print(virtAntPosPresent); Serial.print(",");
+                    Serial.print(drivDirect); Serial.print(",");
+                    Serial.print(filterGPSpos); Serial.print(",");
+                    Serial.print("PVThead RelPosNEDhead,");
+                    Serial.print(UBXPVT1[UBXRingCount1].headMot); Serial.print(",");
+                    Serial.print(UBXRelPosNED[UBXRingCount2].relPosHeading); Serial.print(",");
+                    Serial.print("PVTlat PVTlon,");
+                    Serial.print(UBXPVT1[UBXRingCount1].lat); Serial.print(",");
+                    Serial.print(UBXPVT1[UBXRingCount1].lon); Serial.print(",");
+                    for (byte N = 0; N < OGIdigit; N++) { Serial.write(OGIBuffer[N]); }
+                }
+                newOGI = false;
             }
-            newOGI = false;
+            if (newGGA) {
+                WiFi_udpRoof.writeTo(GGABuffer, GGAdigit, WiFi_ipDestination, Set.portDestination);
+                if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
+                newGGA = false;
+            }
+            if (newVTG) {
+                WiFi_udpRoof.writeTo(VTGBuffer, VTGdigit, WiFi_ipDestination, Set.portDestination);
+                if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
+                newVTG = false;
+            }
+            if (newHDT) {
+                WiFi_udpRoof.writeTo(HDTBuffer, HDTdigit, WiFi_ipDestination, Set.portDestination);
+                if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
+                newHDT = false;
+            }
         }
-        if (newGGA) {
-            WiFi_udpRoof.writeTo(GGABuffer, GGAdigit, WiFi_ipDestination, Set.portDestination);
-            if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
-            newGGA = false;
-        }
-        if (newVTG) {
-            WiFi_udpRoof.writeTo(VTGBuffer, VTGdigit, WiFi_ipDestination, Set.portDestination);
-            if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
-            newVTG = false;
-        }
-        if (newHDT) {
-            WiFi_udpRoof.writeTo(HDTBuffer, HDTdigit, WiFi_ipDestination, Set.portDestination);
-            if (Set.DataTransVia == 8) { delay(5); WiFi_udpRoof.writeTo(OGIBuffer, OGIdigit, WiFi_ipDestination, Set.portDestination); }
-            newHDT = false;
-        }
-    }
+        else {
+            //use Ethernet DataTransVia >= 10
+            if (Set.NtripClientBy == 1) { doEthUDPNtrip(); } //gets Ethernet UDP NTRIP and sends to serial 1 
+            if ((newOGI) && (Set.sendOGI == 1)) {
+                Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
+                for (byte n = 0; n < OGIdigit; n++) {
+                    Eth_udpRoof.print(char(OGIBuffer[n]));
+                }
+                Eth_udpRoof.endPacket();
+                newOGI = false;
+            }
+            if (newGGA) {
+                Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
+                for (byte n = 0; n < GGAdigit; n++) {
+                    Eth_udpRoof.print(char(GGABuffer[n]));
+                }
+                Eth_udpRoof.endPacket();
+                newGGA = false;
+            }
+            if (newVTG) {
+                Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
+                for (byte n = 0; n < VTGdigit; n++) {
+                    Eth_udpRoof.print(char(VTGBuffer[n]));
+                }
+                Eth_udpRoof.endPacket();
+                newVTG = false;
+            }
+            if (newHDT) {
+                Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
+                for (byte n = 0; n < HDTdigit; n++) {
+                    Eth_udpRoof.print(char(HDTBuffer[n]));
+                }
+                Eth_udpRoof.endPacket();
+                newHDT = false;
+            }           
+        }//else WiFi
+    }//else USB
 
-    if (Set.DataTransVia >= 10) {//use Ethernet
-        if (Set.NtripClientBy == 1) { doEthUDPNtrip(); } //gets Ethernet UDP NTRIP and sends to serial 1 
-        if ((newOGI) && (Set.sendOGI == 1)) {
-            Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
-            for (byte n = 0; n < OGIdigit; n++) {
-                Eth_udpRoof.print(char(OGIBuffer[n]));
-            }
-            Eth_udpRoof.endPacket();
-            newOGI = false;
-        }
-        if (newGGA) {
-            Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
-            for (byte n = 0; n < GGAdigit; n++) {
-                Eth_udpRoof.print(char(GGABuffer[n]));
-            }
-            Eth_udpRoof.endPacket();
-            newGGA = false;
-        }
-        if (newVTG) {
-            Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
-            for (byte n = 0; n < VTGdigit; n++) {
-                Eth_udpRoof.print(char(VTGBuffer[n]));
-            }
-            Eth_udpRoof.endPacket();
-            newVTG = false;
-        }
-        if (newHDT) {
-            Eth_udpRoof.beginPacket(Eth_ipDestination, Set.portDestination);
-            for (byte n = 0; n < HDTdigit; n++) {
-                Eth_udpRoof.print(char(HDTBuffer[n]));
-            }
-            Eth_udpRoof.endPacket();
-            newHDT = false;
-        }
-    }
 
     now = millis();
+
     if ((Set.NtripClientBy > 0) && (Set.LEDWiFi_PIN != 0)) {
 
         if (now > (NtripDataTime + 3000)) {
@@ -638,7 +645,6 @@ void loop()
         }
     }
 
-    now = millis();
 
     //WiFi rescann button pressed?
     if (!digitalRead(Set.Button_WiFi_rescan_PIN)) {
@@ -649,8 +655,8 @@ void loop()
 
     if (WiFi_reconnect_step > 0) {
         if (now > (WiFi_lost_time + 500)) {
-            //do every second
-            Serial.print("WiFi_reconnect_step: "); Serial.println(WiFi_reconnect_step);
+            //do every half second
+            if (Set.debugmode) { Serial.print("WiFi_reconnect_step: "); Serial.println(WiFi_reconnect_step); }
             switch (WiFi_reconnect_step) {
             case 1:
                 if (Ping.ping(Set.WiFi_gwip)) { //retry to connect NTRIP, WiFi is available
@@ -726,14 +732,15 @@ void loop()
         if (now > (NtripDataTime + 30000))
         {
             NtripDataTime = millis();
-            Serial.println("no NTRIP for more than 30s");
-            /*      if (Set.NtripClientBy == 2) {
-                      WiFi_Ntrip_cl.stop();
-                      Serial.println("trying to reconnect to NTRIP server");
-                      delay(200);
-                      connectTo_WiFi_Ntrip();
-                  }
-              */
+            if (Set.NtripClientBy == 2) { Serial.println("no NTRIP data from ESP32 NTRIP client for more than 30s"); }
+            else {
+                Serial.print("no NTRIP for more than 30s from ");
+                if (Set.DataTransVia < 5) { Serial.println("USB"); }
+                else
+                    if (Set.DataTransVia < 10) { Serial.println("WiFi"); }
+                    else
+                        if (Set.DataTransVia >= 10) { Serial.println("Ethernet"); }
+            }
         }
     }
 #endif

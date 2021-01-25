@@ -185,8 +185,8 @@ bool getRtcmData() {
     while (WiFi_Ntrip_cl.available()) {
         char a = WiFi_Ntrip_cl.read();
         Serial1.print(a);//send to F9P
-
     }
+    //Serial1.println();
     now = millis();
     if (Set.NtripSendWhichGGASentence > 0) {
         if (now - NTRIP_GGA_send_lastTime > (Set.NtripGGASendRate * 1000)) {

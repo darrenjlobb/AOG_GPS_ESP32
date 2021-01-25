@@ -4,7 +4,7 @@
 //--------------------------------------------------------------
 #define EEPROM_SIZE 800
 #define EE_ident1 0xED  // Marker Byte 0 + 1
-#define EE_ident2 0x45
+byte EE_ident2 = vers_nr;
 
 
 //--------------------------------------------------------------

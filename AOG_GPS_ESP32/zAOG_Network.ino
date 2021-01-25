@@ -223,11 +223,18 @@ void Eth_Start() {
             Serial.print("changed IP to ");
             Serial.println(Ethernet.localIP());
             Ethernet_running = true;
-            //init UPD Port sending to AOG //don't init 2 different Eth UDP ports, won't work!
+            //init UPD Port sending to AOG
             if (Eth_udpRoof.begin(Set.portMy))
             {
                 Serial.print("Ethernet UDP sending from port: ");
                 Serial.println(Set.portMy);
+            }
+            delay(50);
+            //init UPD Port getting NTRIP from AOG
+            if (Eth_udpNtrip.begin(Set.AOGNtripPort))
+            {
+                Serial.print("Ethernet NTRIP UDP listening to port: ");
+                Serial.println(Set.AOGNtripPort);
             }
             delay(50);
         }
@@ -236,36 +243,59 @@ void Eth_Start() {
 }
 
 
+
+
 //-------------------------------------------------------------------------------------------------
 
 void doEthUDPNtrip() {
-    Eth_udpRoof.stop();
-    Eth_udpNtrip.begin(Set.AOGNtripPort);
-    packetLenght = Eth_udpNtrip.parsePacket();
+    unsigned int packetLenght = Eth_udpNtrip.parsePacket();
     if (packetLenght)
-		{
-			if (Set.debugmode) { Serial.println("got NTRIP data via Ethernet"); }
-            Eth_udpNtrip.read(packetBuffer, packetLenght);
-			for (unsigned int i = 0; i < packetLenght; i++)
-			{
-				Serial1.print(packetBuffer[i]);
-			}
-			NtripDataTime = millis();
-		}  // end of Packet
-    Eth_udpNtrip.stop();
-    Eth_udpRoof.begin(Set.portMy);
-	if ((NtripDataTime + 30000) < millis())
-	{
-		NtripDataTime = millis();
-		Serial.println("no NTRIP from AOG for more than 30s via Ethernet");
-	}
+    {
+        if (Set.debugmode) { Serial.println("got NTRIP data via Ethernet"); }
+        Eth_udpNtrip.read(packetBuffer, packetLenght);
+        for (unsigned int i = 0; i < packetLenght; i++)
+        {
+            Serial1.print(packetBuffer[i]);
+        }
+        Serial1.println(); //really send data from UART buffer
+        NtripDataTime = millis();        
+    }  // end of Packet
 }
 
 #endif
 
 //-------------------------------------------------------------------------------------------------
-/* from autosteer code, not for async udp
-void UDP_Start()
+/* 
+//-------------------------------------------------------------------------------------------------
+
+void doEthUDPTest() {
+//    Eth_udpRoof.stop();
+//    delay(1);
+//    Eth_udpNtrip.begin(Set.portAOG);
+
+    unsigned int packetLenght = Eth_udpNtrip.parsePacket();
+    if (packetLenght)
+    {
+        Serial.print(millis());
+        Serial.println("got UDP data via Ethernet");
+        Eth_udpNtrip.read(packetBuffer, packetLenght);
+        for (unsigned int i = 0; i < packetLenght; i++)
+        {
+            //Serial1.print(packetBuffer[i]);
+            Serial.print(packetBuffer[i]);
+        }
+        NtripDataTime = millis();
+        // end of Packet
+        Serial.println();
+    }
+//    Eth_udpNtrip.stop();
+//    delay(1);
+ //   Eth_udpRoof.begin(Set.portMy);
+}
+
+
+ from autosteer code, not for async udp
+ void UDP_Start()
 {
     if (UDPToAOG.begin(steerSet.portMy))
     {
