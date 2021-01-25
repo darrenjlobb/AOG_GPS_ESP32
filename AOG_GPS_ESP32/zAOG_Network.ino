@@ -240,7 +240,7 @@ void Eth_Start() {
 
 void doEthUDPNtrip() {
     Eth_udpRoof.stop();
-    Eth_udpNtrip.begin(Set.portAOG);
+    Eth_udpNtrip.begin(Set.AOGNtripPort);
     packetLenght = Eth_udpNtrip.parsePacket();
     if (packetLenght)
 		{
