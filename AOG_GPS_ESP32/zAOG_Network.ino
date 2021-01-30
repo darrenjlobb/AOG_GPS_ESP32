@@ -255,7 +255,7 @@ void doEthUDPNtrip() {
         Eth_udpNtrip.read(packetBuffer, packetLenght);
         for (unsigned int i = 0; i < packetLenght; i++)
         {
-            Serial1.print(packetBuffer[i]);
+            Serial1.write(packetBuffer[i]);
         }
         Serial1.println(); //really send data from UART buffer
         NtripDataTime = millis();        
