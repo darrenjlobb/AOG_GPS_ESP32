@@ -4,6 +4,7 @@ void doSerialNTRIP() {
 	{
 		incomingByte = Serial.read();
 		Serial1.write(incomingByte);
+		//Serial1.print(incomingByte);
 	}
 	if (incomingByte != 0) {
 		NtripDataTime = millis();

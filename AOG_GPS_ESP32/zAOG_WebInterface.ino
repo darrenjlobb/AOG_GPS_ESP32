@@ -264,25 +264,32 @@ void process_Request()
                 break;
             case 1://AOG WiFi NTRIP
                 Set.NtripClientBy = 1;
-                if ((Set.DataTransVia > 5) && (Set.DataTransVia < 10)) {
-                    //start WiFI UDP                
-                    if (WiFi_udpNtrip.listen(Set.AOGNtripPort))
-                    {
-                        Serial.print("NTRIP UDP Listening to port: ");
-                        Serial.println(Set.AOGNtripPort);
-                        Serial.println();
-                    }
-                    delay(50);
-                    // UDP NTRIP packet handling
-                    WiFi_udpNtrip.onPacket([](AsyncUDPPacket packet)
+                if (Set.DataTransVia > 5) {
+                    if (Set.DataTransVia < 10) {
+                        //start WiFI UDP                
+                        if (WiFi_udpNtrip.listen(Set.AOGNtripPort))
                         {
-                            if (Set.debugmode) { Serial.println("got NTRIP data"); }
-                            for (unsigned int i = 0; i < packet.length(); i++)
+                            Serial.print("NTRIP UDP Listening to port: ");
+                            Serial.println(Set.AOGNtripPort);
+                            Serial.println();
+                        }
+                        delay(100);
+                        // UDP NTRIP packet handling
+                        WiFi_udpNtrip.onPacket([](AsyncUDPPacket packet)
                             {
-                                Serial1.write(packet.data()[i]);
-                            }
-                            NtripDataTime = millis();
-                        });  // end of onPacket call
+                                if (Set.debugmode) { Serial.println("got NTRIP data"); }
+                                for (unsigned int i = 0; i < packet.length(); i++)
+                                {
+                                    Serial1.write(packet.data()[i]);
+                                }
+                                NtripDataTime = millis();
+                            });  // end of onPacket call
+                        WiFi_UDP_running = true;
+                    }
+                    else {
+                    //Ethernet
+                        if (WiFi_UDP_running) { WiFi_udpNtrip.close(); WiFi_UDP_running = false; }
+                    }
                 }
                 break;
             case 2://ESP32 NTRIP client
@@ -323,25 +330,32 @@ void process_Request()
             if ((temLong <= 20) && (temLong >= 0)) { Set.DataTransVia = byte(temLong); }
             if (Set.DataTransVia == 10) { if (!Ethernet_running) { Eth_Start(); } }
             if (Set.NtripClientBy == 1) {
-                if ((Set.DataTransVia > 5) && (Set.DataTransVia < 10)) {
-                    //start WiFI UDP                
-                    if (WiFi_udpNtrip.listen(Set.AOGNtripPort))
-                    {
-                        Serial.print("NTRIP UDP Listening to port: ");
-                        Serial.println(Set.AOGNtripPort);
-                        Serial.println();
-                    }
-                    delay(50);
-                    // UDP NTRIP packet handling
-                    WiFi_udpNtrip.onPacket([](AsyncUDPPacket packet)
+                if (Set.DataTransVia > 5) {
+                    if (Set.DataTransVia < 10) {
+                        //start WiFI UDP                
+                        if (WiFi_udpNtrip.listen(Set.AOGNtripPort))
                         {
-                            if (Set.debugmode) { Serial.println("got NTRIP data"); }
-                            for (unsigned int i = 0; i < packet.length(); i++)
+                            Serial.print("NTRIP UDP Listening to port: ");
+                            Serial.println(Set.AOGNtripPort);
+                            Serial.println();
+                        }
+                        delay(100);
+                        // UDP NTRIP packet handling
+                        WiFi_udpNtrip.onPacket([](AsyncUDPPacket packet)
                             {
-                                Serial1.write(packet.data()[i]);
-                            }
-                            NtripDataTime = millis();
-                        });  // end of onPacket call
+                                if (Set.debugmode) { Serial.println("got NTRIP data"); }
+                                for (unsigned int i = 0; i < packet.length(); i++)
+                                {
+                                    Serial1.write(packet.data()[i]);
+                                }
+                                NtripDataTime = millis();
+                            });  // end of onPacket call
+                        WiFi_UDP_running = true;
+                    }
+                    else {
+                        //Ethernet
+                        if (WiFi_UDP_running) { WiFi_udpNtrip.close(); WiFi_UDP_running = false; }
+                    }
                 }
             }
         }

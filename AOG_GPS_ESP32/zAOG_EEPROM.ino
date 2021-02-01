@@ -606,16 +606,16 @@ void Serial_Traffic() {
 						if (Set.dualGPS == 5) {
 							//send OGI only if new GGA position came in
 							if (strcmp(Sent_Buffer1, "GGA") == 0) {
-								WiFi_udpRoof.writeTo(OGIBuffer, OGIlenght, WiFi_ipDestination, portDestination);
+								WiFi_udpRoof.writeTo(OGIBuffer, OGIlenght, WiFi_ipDestination, PortDestination);
 							}
 						}
 						else {
 							if ((newHDT) && (strcmp(Sent_Buffer1, "VTG"))) {
 								//if new vtg then send hdt too
-								WiFi_udpRoof.writeTo(HDTBuffer, int(19), WiFi_ipDestination, portDestination);
+								WiFi_udpRoof.writeTo(HDTBuffer, int(19), WiFi_ipDestination, PortDestination);
 								delay(2);
 							}
-							WiFi_udpRoof.writeTo(gpsBuffer1, i1, WiFi_ipDestination, portDestination);
+							WiFi_udpRoof.writeTo(gpsBuffer1, i1, WiFi_ipDestination, PortDestination);
 						}
 					}
 					//send also via BT if no Tractor WIFI = AP mode
