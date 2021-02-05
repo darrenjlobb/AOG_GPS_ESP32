@@ -1,17 +1,55 @@
 #if HardwarePlatform == 0
 
+
+void Eth_NTRIP_Code(void* pvParameters) {
+    Serial.println("started new task on core 0: Ethernet NTRIP");
+    for (;;) { // MAIN LOOP FOR THIS CORE
+        if (Ethernet_running) {
+            if (Set.NtripClientBy == 1) {
+                task_Eth_NTRIP_running = true;
+                if (doEthUDPNtrip() < 255) { vTaskDelay(2); }//10
+            }
+            else {
+                task_Eth_NTRIP_running = false;
+                delay(1);
+                vTaskDelete(NULL);
+                delay(1);
+            }
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+
+int doEthUDPNtrip() {
+    unsigned int packetLenght = Eth_udpNtrip.parsePacket();
+    if (packetLenght) {
+        if (Set.debugmode) { Serial.print("got NTRIP data via Ethernet lenght: "); Serial.println(packetLenght); }
+        Eth_udpNtrip.read(packetBuffer, packetLenght);
+        Eth_udpNtrip.flush();
+        for (unsigned int i = 0; i < packetLenght; i++)
+        {
+            Serial1.write(packetBuffer[i]);
+        }
+        NtripDataTime = millis();
+    }  // end of Packet
+    return packetLenght;
+}
+
+
+//-------------------------------------------------------------------------------------------------
 //main NTRIP client loop, running in separate task
 
-void NTRIPCode(void* pvParameters) {
+void NTRIP_Client_Code(void* pvParameters) {
     unsigned long WiFi_Ntrip_lost_time = 0;// now;
 
     for (;;) { // MAIN LOOP FOR THIS CORE
         if (Set.NtripClientBy == 2) {
-            task_NTRIP_running = true;
+            task_NTRIP_Client_running = true;
             if ((WiFi.status() == WL_CONNECTED) && (Ntrip_restart < 10)) { do_WiFi_NTRIP(); }
             else {
                 if (my_WiFi_Mode == 0){
-                    task_NTRIP_running = false;
+                    task_NTRIP_Client_running = false;
                     delay(1);
                     vTaskDelete(NULL);
                 }
@@ -19,14 +57,14 @@ void NTRIPCode(void* pvParameters) {
                 delay(1);
                 now = millis();
                 if (now > (WiFi_Ntrip_lost_time + 2000)) {
-                    task_NTRIP_running = false;
+                    task_NTRIP_Client_running = false;
                     delay(1);
                     vTaskDelete(NULL);
                 }
             }
         }
         else {
-            task_NTRIP_running = false;
+            task_NTRIP_Client_running = false;
             delay(1);
             vTaskDelete(NULL);
         }
@@ -57,8 +95,8 @@ void do_WiFi_NTRIP() {
     }
     if (!getRtcmData()) {
         Serial.print("\nCan not reach hoster, internet connection broken\n");
-        //vTaskDelay(5000 / portTICK_PERIOD_MS);
-        delay(5000);
+        vTaskDelay(5000);
+        //delay(5000);
         Serial.print("\nTrying to reconnect\n");
         Ntrip_restart++;
     }
@@ -188,6 +226,8 @@ bool getRtcmData() {
             if (Set.NtripSendWhichGGASentence == 0) Serial.println("Check if your NTRIP Provider requires your Position");
             return false;
         }
+        vTaskDelay(2);
+        //delay(1);
     }
 
     // Read all the bytes of the reply from server and print them to Serial
@@ -195,6 +235,8 @@ bool getRtcmData() {
         char a = WiFi_Ntrip_cl.read();
         Serial1.print(a);//send to F9P
     }
+    vTaskDelay(1);
+    //delay(1);
     //Serial1.println();
     now = millis();
     if (Set.NtripSendWhichGGASentence > 0) {

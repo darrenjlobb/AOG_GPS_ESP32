@@ -294,10 +294,10 @@ void process_Request()
                 break;
             case 2://ESP32 NTRIP client
                 Set.NtripClientBy = 2;
-                if (!task_NTRIP_running) {
+                if (!task_NTRIP_Client_running) {
                     Ntrip_restart = 1;
                     NtripDataTime = millis();
-                    xTaskCreatePinnedToCore(NTRIPCode, "Core1", 3072, NULL, 1, &Core1, 1);
+                    xTaskCreatePinnedToCore(NTRIP_Client_Code, "Core1", 3072, NULL, 1, &Core1, 1);
                     delay(500);
                 }
                 break;
@@ -670,6 +670,30 @@ void make_HTML01() {
     strcat(HTML_String, "</table>");
     strcat(HTML_String, "</form>");
     strcat(HTML_String, "<br><hr>");
+/*
+    //---------------------------------------------------------------------------------------------
+    // Checkboxes static IP
+    strcat(HTML_String, "<h2>IP configuration</h2>");
+    strcat(HTML_String, "<form>");
+    strcat(HTML_String, "<table>");
+    set_colgroup(300, 250, 150, 0, 0);
+
+    strcat(HTML_String, "<tr>");
+    strcat(HTML_String, "<td></td><td><input type=\"checkbox\" onclick=\"sendVal('/?seOGI='+this.checked)\" name=\"seOGI\" id = \"Part\" value = \"1\" ");
+    if (Set.sendOGI == 1) strcat(HTML_String, "checked ");
+    strcat(HTML_String, "> ");
+    strcat(HTML_String, "<label for =\"Part\"> send PAOGI</label>");
+    strcat(HTML_String, "</td>");
+    strcat(HTML_String, "<td><input type= \"button\" onclick= \"sendVal('/?Save=true')\" style= \"width:120px\" value=\"Save\"></button></td>");
+
+
+    strcat(HTML_String, "</tr>");
+
+    strcat(HTML_String, "</table>");
+    strcat(HTML_String, "</form>");
+    strcat(HTML_String, "<br><hr>");
+*/
+
 
     //---------------------------------------------------------------------------------------------  
     // NTRIP
