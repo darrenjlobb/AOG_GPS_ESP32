@@ -421,7 +421,7 @@ void doEthUDPNtrip() {
         {
             Serial1.write(packetBuffer[i]);
         }
-        Serial1.println(); //really send data from UART buffer
+        //Serial1.println(); //really send data from UART buffer
         NtripDataTime = millis();
     }  // end of Packet
 }
