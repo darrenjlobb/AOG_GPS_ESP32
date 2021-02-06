@@ -1,4 +1,4 @@
-#if HardwarePlatform == 0
+  #if HardwarePlatform == 0
 // WIFI handling 31. Jan 2021 for ESP32  -------------------------------------------
 
 void WiFi_handle_connection() {
@@ -357,7 +357,7 @@ void WiFi_Start_AP() {
 void Eth_Start() {
     Ethernet.init(Set.Eth_CS_PIN);
     delay(50);
-    Ethernet.begin(mac);
+    Ethernet.begin(mac, ip);
     delay(200);
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
         Serial.println("no Ethernet hardware");
@@ -366,6 +366,8 @@ void Eth_Start() {
         Serial.println("Ethernet hardware found, checking for connection");
         if (Ethernet.linkStatus() == LinkOFF) {
             Serial.println("Ethernet cable is not connected.");
+            delay(2000);
+            Eth_Start();
         }
         else {
             Serial.println("Ethernet status OK");

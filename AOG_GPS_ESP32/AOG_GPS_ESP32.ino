@@ -59,26 +59,26 @@ struct set {
     //WiFi---------------------------------------------------------------------------------------------
 #if HardwarePlatform == 0
     //tractors WiFi or mobile hotspots
-    char ssid1[24] =  "Fendt_209V";           // WiFi network Client name
+    char ssid1[24] =  "";           // WiFi network Client name
     char password1[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid2[24] = "Matthias Cat S62 Pro";// WiFi network Client name
+    char ssid2[24] = "";// WiFi network Client name
     char password2[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid3[24] = "Fendt_209V";           // WiFi network Client name
+    char ssid3[24] = "";           // WiFi network Client name
     char password3[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid4[24] = "CAT S41";       // WiFi network Client name
+    char ssid4[24] = "";       // WiFi network Client name
     char password4[24] = "";                 // WiFi network password//Accesspoint name and password
-    char ssid5[24] = "WLANHammer";    // WiFi network Client name
+    char ssid5[24] = "";    // WiFi network Client name
     char password5[24] = "";                 // WiFi network password//Accesspoint name and password
 
-    char ssid_ap[24] = "GPS_unit_F9P_Net";  // name of Access point, if no WiFi found, NO password!!
-    int timeoutRouter = 20;                //time (s) to search for existing WiFi, than starting Accesspoint 
+    char ssid_ap[24] = "6630_GPS_CONFIG";  // name of Access point, if no WiFi found, NO password!!
+    int timeoutRouter = 1;                //time (s) to search for existing WiFi, than starting Accesspoint 
 
-    byte timeoutWebIO = 255;                 //time (min) afterwards webinterface is switched off
+    byte timeoutWebIO = 1;                 //time (min) afterwards webinterface is switched off
      
     // Ntrip Caster Data
-    char NtripHost[40] = "www.sapos-bw-ntrip.de";//  "80.154.101.74";    // Server IP or URL
+    char NtripHost[40] = "";//  "80.154.101.74";    // Server IP or URL
     int  NtripPort = 2101;                // Server Port
-    char NtripMountpoint[40] = "SAPOS-LW-MSM";   // Mountpoint
+    char NtripMountpoint[40] = "";   // Mountpoint
     char NtripUser[40] = "";     // Username
     char NtripPassword[40] = "";    // Password
 
@@ -97,7 +97,7 @@ struct set {
     byte mask[4] = { 255, 255, 255, 0 };
     byte myDNS[4] = { 8, 8, 8, 8 };         //optional
     byte WiFi_ipDest_ending = 255;//ending of IP address to send UDP data to
-    byte Eth_ipDest_ending = 100;//ending of IP address to send UDP data to
+    byte Eth_ipDest_ending = 255;//ending of IP address to send UDP data to
 
     unsigned int PortGPSToAOG = 5544;             //this is port of this module: Autosteer = 5577 IMU = 5566 GPS = 
     unsigned int PortFromAOG = 8888;            //port to listen for AOG
@@ -106,9 +106,9 @@ struct set {
 #endif
 
     //Antennas position
-    double AntDist = 74.0;                //cm distance between Antennas
-    double AntHight = 228.0;              //cm hight of Antenna
-    double virtAntLeft = 42.0;           //cm to move virtual Antenna to the left (was renamed, keep your settings, name of direction was wrong)
+    double AntDist = 176.0;                //cm distance between Antennas
+    double AntHight = 302.0;              //cm hight of Antenna
+    double virtAntLeft = 0;           //cm to move virtual Antenna to the left (was renamed, keep your settings, name of direction was wrong)
     double virtAntForew = 0;// 60.0;            //cm to move virtual Antenna foreward
     double headingAngleCorrection = 90;
 
@@ -121,7 +121,7 @@ struct set {
 
     byte MaxHeadChangPerSec = 30;         // degrees that heading is allowed to change per second
    
-    byte DataTransVia = 7;// 7;                //transfer data via 0 = USB / 7 = WiFi UDP / 8 = WiFi UDP 2x / 10 = Ethernet UDP
+    byte DataTransVia = 10;// 7;                //transfer data via 0 = USB / 7 = WiFi UDP / 8 = WiFi UDP 2x / 10 = Ethernet UDP
 
     byte NtripClientBy = 1;               //NTRIP client 0:off /1: listens for AOG NTRIP to UDP (WiFi/Ethernet) or USB serial /2: use ESP32 WiFi NTIRP client
 
@@ -198,6 +198,7 @@ double HeadingQuotaVTG = 0.5;
 
 #if HardwarePlatform == 0
 //WIFI+Ethernet
+IPAddress ip(192,168,1,0);
 IPAddress WiFi_ipDestination,Eth_ipDestination; //set in network.ino
 byte WiFi_netw_nr = 0 , my_WiFi_Mode = 0;   // WIFI_STA = 1 = Workstation  WIFI_AP = 2  = Accesspoint
 
@@ -597,6 +598,12 @@ void loop()
             }
         }
     }
+
+if (Ethernet.linkStatus() == LinkOFF) {
+            Serial.println("Ethernet cable is not connected.");
+            delay(2000);
+            ESP.restart();
+}
 #endif
 
 }

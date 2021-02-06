@@ -30,6 +30,12 @@ int doEthUDPNtrip() {
         for (unsigned int i = 0; i < packetLenght; i++)
         {
             Serial1.write(packetBuffer[i]);
+            if (Set.debugmode) { 
+            Serial.print(packetBuffer[i], HEX);
+            }
+        }
+        if (Set.debugmode) {
+            Serial.println();
         }
         NtripDataTime = millis();
     }  // end of Packet
